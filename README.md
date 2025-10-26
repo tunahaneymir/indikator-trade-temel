@@ -1,0 +1,1 @@
+# indikator-trade-temel
