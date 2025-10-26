@@ -1,0 +1,148 @@
+OTONOM TRADING BOTU - SİSTEM MİMARİSİ DOKÜMANI
+
+🎯 SİSTEM ÖZETİ
+
+Ana Hedef: RL + ML + Adaptive Learning ile kendi kendine öğrenen, multi-timeframe çalışan, riski otomatik yöneten akıllı trading botu.
+
+Çalışma Planı:
+
+6 ay demo trading (paper trade)
+Sonrasında real trade'e geçiş
+Sürekli öğrenme ve optimizasyon
+🏗️ SİSTEM MİMARİSİ
+
+3'LÜ AGENT SİSTEMİ
+
+1. COIN SELECTOR AGENT
+
+Görevi: Hangi coin'lerde trade yapılacak?
+Çalışma Şekli:
+
+Coinbase Top 20 coin listesini al
+Her 6 saatte bir güncelle
+Sistem her başladığında yenile
+Özellikler:
+Öğrenme YOK - sabit kurallar
+Filtreleme YOK - direkt 20 coin
+2. TRADER AGENT (RL + ML + ADAPTIVE)
+
+Görevi: NE ZAMAN AL/SAT yapılacak?
+Çalışma Şekli:
+
+Her (coin, timeframe) için ayrı öğrenme
+Win rate'e göre dynamic allocation
+En iyi performanslı (coin, TF) çiftlerine öncelik
+Özellikler:
+GERÇEK ZAMANLI ÖĞRENME (sadece kendi trade'lerinden)
+Her trade'den sonra başarı oranlarını güncelle
+Her 10 trade'de bir parametre optimizasyonu
+Geçmiş historical data ile backtest YOK
+3. POSITION SIZER AGENT
+
+Görevi: NE KADAR PARAYLA trade yapılacak?
+Çalışma Şekli:
+
+Sabit %3 risk per trade
+Maksimum 5x kaldıraç (izole margin)
+Max 5 açık pozisyon
+Özellikler:
+Öğrenme YOK - matematiksel hesaplama
+Bütçe yoksa yeni trade YOK
+⚙️ TEKNİK DETAYLAR
+
+TIMEFRAME SİSTEMİ
+
+4H, 1H, 15m multi-timeframe
+Her coin için sadece 1 timeframe'de trade
+Win rate'e göre en iyi timeframe seçimi
+RISK MANAGEMENT
+
+Sabit %3 risk per trade (ana bakiye bazlı)
+Max 5 açık pozisyon - 6. için sıra bekleme
+Win rate priority queue - yüksek win rate öncelikli
+Trailing stop - her trade için aktif
+LEARNING MEKANİZMASI
+
+ε-greedy strategy: %85 iyi parametre, %15 yeni deneme
+Coin-specific learning: Volatile coin'lerde hızlı öğrenme
+Adaptive learning rate: Win rate düşünce hızı artır
+Continuous optimization: Her 10 trade'de parametre güncelleme
+DATA PERSISTENCE
+
+SQLite database - tüm veriler kayıtlı
+Her trade sonrası otomatik kaydetme
+Elektrik kesintisi güvenliği - kaldığı yerden devam
+Açık pozisyon sync - crash sonrası otomatik recovery
+📊 GÖRSEL & BİLDİRİM SİSTEMİ
+
+OTOMATİK CHART OLUŞTURMA
+
+Her trade için mum grafiği (PNG)
+Gösterilenler: Price action, [İNDİKATÖRLER BURAYA GELECEK], entry/exit noktaları, stop loss/take profit çizgileri
+Dosya yönetimi: 30 gün temizlik (önemli trade'ler korunur)
+TELEGRAM BOT BİLDİRİMLERİ
+
+python
+# TRADE OPEN BİLDİRİMİ:
+📈 TRADE OPEN | 😌
+💰 Coin: BTC/USDT | 4H
+🎯 Action: LONG
+🔢 Entry: $65,200
+🛡️ SL: $63,800 | 🎯 TP: $68,500
+⚖️ Leverage: 5x | Risk: 3%
+💭 Duygusal Durum: Sakin ve disiplinli
+
+# TRADE CLOSE BİLDİRİMİ:
+📉 TRADE CLOSE | 🎉
+💰 Coin: BTC/USDT | 4H
+📊 Result: WIN | PNL: +5.5%
+⚖️ R/R: 1:2.3 | Süre: 18 saat
+🧠 Öğrenim: Trend takibi başarılı
+💡 Tavsiye: Disiplini koru
+DUYGUSAL ÖĞRENİM SİSTEMİ
+
+Revenge trading tespiti
+FOMO (fear of missing out) analizi
+Overconfidence kontrolü
+Duygusal feedback ve tavsiyeler
+🔄 SİSTEM AKIŞI
+
+NORMAL ÇALIŞMA:
+
+Coin Selector → 20 coin listesi
+Trader Agent → Sinyal kontrolü (tüm coin/TF)
+Position Sizer → Bütçe ve pozisyon kontrolü
+Trade execution → AL/SAT işlemi
+Learning update → Parametre optimizasyonu
+Data persistence → Tüm verileri kaydet
+Telegram bildirim → Trade detayları gönder
+CRASH RECOVERY:
+
+Database'den son state'i yükle
+Açık pozisyonları exchange'den kontrol et
+Aktif pozisyonları yönetime geri al
+Learning'i kaldığı yerden devam et
+Normal trading'e başla
+🎯 PERFORMANS HEDEFLERİ
+
+Win Rate: %60+
+Max Drawdown: <%15
+Aylık Getiri: İstikrarlı %5-10
+Trade Sayısı: Overtrade korumalı (max 25/gün)
+📁 DOSYA YAPISI
+
+text
+trading_bot/
+├── database/
+│   └── trading_data.db (SQLite)
+├── charts/
+│   ├── active/ (açık trade'ler)
+│   ├── closed/ (kapalı trade'ler)
+│   └── special/ (korunan trade'ler)
+├── logs/
+│   ├── trade_history.json
+│   └── emotional_learning.json
+└── config/
+    ├── telegram_bot.yaml
+    └── exchange_keys.yaml
+NOT: İndikatörler daha sonra belirlenecek ve sisteme entegre edilecek. Şu an için indikatörler [İNDİKATÖRLER BURAYA GELECEK] olarak işaretlenmiştir.
