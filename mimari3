@@ -193,3 +193,70 @@ STATUS: READY FOR IMPLEMENTATION
 TIMELINE: 6 MONTHS PAPER TRADE
 TARGET: CONSISTENT PROFITABILITY WITH <8% DRAWDOWN
 Bu mimariyi kaydedin - geliştirmeler için temel referans olacaktır! 🚀
+
+TRADEBOT β - SON GÜNCELLEMELER
+
+1. ANTI-OVERTRADE & ANTI-REVENGE SİSTEMİ
+
+python
+overtrade_protection = {
+    "günlük_işlem_limit": 10,
+    "sks_minimum": 70,
+    "coin_bazlı_bekleme": "30 dakika (her işlemden sonra - aynı coin)",
+    "ardışık_kayıp_ban": "7 ardışık kayıp → o gün ban (24 saat DEĞİL)",
+    "günlük_reset": "00:00'da TÜM banlar ve limitler sıfırlanır"
+}
+2. COIN BAZLI KORUMA AKIŞI
+
+python
+coin_protection_flow = {
+    "normal_akış": "Her işlemden sonra 30 dakika bekleme (aynı coin)",
+    "kayıp_akışı": "Kayıptan sonra 30 dakika bekleme (aynı coin)",
+    "ban_akışı": "7 ardışık kayıp → coin o gün ban → ertesi gün 00:00'da açılır"
+}
+3. OPTIMIZASYON PARAMETRELERİ (Değişmedi)
+
+python
+optimization_params = {
+    "supertrend_15m": ["atr_period", "multiplier"],
+    "supertrend_1h": ["atr_period", "multiplier"],
+    "most_rsi": ["period", "var1", "var2"],
+    "volume_spike": ["lookback", "multiplier"],
+    "learning_bars": ["quick_retrain", "deep_retrain"]
+}
+4. LEARNING SCHEDULE (Değişmedi)
+
+python
+learning_schedule = {
+    "quick_retrain": "3 trade'de bir",
+    "deep_retrain": "20 trade'de bir", 
+    "baz_optimizasyonu": "Coin bazlı + timeframe bazlı"
+}
+5. VISUALIZATION & STORAGE (Değişmedi)
+
+python
+storage_system = {
+    "trade_png": "Otomatik kaydet",
+    "png_temizleme": "Haftalık (en iyi 20'yi sakla)",
+    "dashboard": "Real-time performans takibi"
+}
+🎯 DEĞİŞEN TEK ŞEY: RISK MANAGEMENT KISMI
+
+ESKİ: Sadece %2 risk kuralı
+YENİ: %2 risk + anti-overtrade + anti-revenge kuralları
+
+✅ FİNAL MİMARİYE EKLENECEK MADDE:
+
+text
+## 🚫 ANTI-OVERTRADE & ANTI-REVENGE SİSTEMİ
+
+**Amaç:** Aşırı işlem ve intikam alımını engellemek
+
+**Kurallar:**
+1. Günlük maksimum 10 işlem (tüm coin'ler toplam)
+2. SKS minimum 70 şartı
+3. Coin bazlı 30 dakika bekleme (her işlemden sonra)
+4. 7 ardışık kayıpta coin o gün için ban
+5. Her gün 00:00'da tüm banlar ve limitler sıfırlanır
+
+**Not:** Ban 24 saat değil, sadece o gün için geçerlidir.
