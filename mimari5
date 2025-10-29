@@ -1,0 +1,126 @@
+AI TRADING SYSTEM ARCHITECTURE — v2.5 (Paper Trading)
+🎯 Amaç
+15m ve 1h timeframe’lerde çalışan, coin bazlı ve indikatör bazlı optimizasyon yapan,
+RL destekli (PPO) akıllı sistem. Trend, momentum ve hacim sinyallerine göre pozisyon açar,
+system exit ve hard stop’u ayırır, tek yönlü pozisyon yönetir ve reversal işlemleri mantıklı şekilde yürütür.
+🏗️ Ana Mimarî Katmanlar
+1️⃣ DATA LAYER
+Aynı (Binance Testnet real-time feed, 15m–1h TF, cache 90 days).
+Artık “execution mode” parametresiyle Paper/Live ayrımı açık:
+data_sources = {
+  "exchange": "Binance Testnet (real-time simulated)",
+  "timeframes": ["15m", "1h"],
+  "coins": "Top 20 by market cap",
+  "cache": "90 days",
+  "execution_mode": "paper",  # 'paper' or 'live'
+}
+2️⃣ CORE ENGINE LAYER (Yeniden Tanımlanmış)
+core_modules = {
+  "signal_generator": "SuperTrend + MOST RSI + Volume Spike",
+  "position_state_manager": "Controls LONG/SHORT/FLAT transitions",
+  "signal_interpreter": "Determines buy/sell/hold based on confirmation logic",
+  "rl_agent": "PPO policy-gradient learner",
+  "risk_manager": "Dynamic ATR SL, DD, cooldown, and SL count checks"
+}
+⚙️ Yeni Eklenen Alt Modüller
+🧩 A) core/position_state_manager
+Amaç: Pozisyon durumlarını izlemek ve çakışmasız yön geçişi sağlamak.
+State Machine Mantığı
+states = ["FLAT", "LONG", "SHORT"]
+
+if signal == "BUY":
+    if state == "FLAT": open_long()
+    elif state == "SHORT": close_short(); open_long()
+    elif state == "LONG": maybe_scale_in()
+
+elif signal == "SELL":
+    if state == "FLAT": open_short()
+    elif state == "LONG": close_long(); open_short()
+    elif state == "SHORT": maybe_scale_in()
+
+elif signal == "HOLD":
+    manage_trailing_sl()
+Özellikler:
+Hedging kapalı → aynı coinde iki yönlü pozisyon yok.
+“Reversal logic” akıcı → önce exit, sonra entry.
+“Confirmation delay” (ör. 1–3 bar) opsiyonu var: sidewaysde fren sağlar.
+Trade cooldown (per coin) → gereksiz back-to-back sinyalleri filtreler.
+🧩 B) core/signal_interpreter
+Amaç: Üçlü indikatör setini (trend, momentum, hacim) tekleştirip kesin karar üretmek.
+Kullanılan kaynaklar:
+SuperTrend.direction → UP/DOWN
+MOST_RSI.signal → BULL/BEAR
+VolumeSpike.confirmed → True/False
+Karar tablosu:
+Trend	Momentum	Hacim	Sonuç
+UP	Bull	True	BUY
+DOWN	Bear	True	SELL
+UP	Bear	True	HOLD (uyumsuz sinyal)
+DOWN	Bull	True	HOLD (uyumsuz sinyal)
+-	-	False	HOLD (hacim yetersiz)
+Ek filtreler:
+confirmation_bars = 1–3 (trend yönü değişimi kalıcı mı?)
+noise_filter = EMA distance < 0.5% → sideways ortam → sinyali yoksay.
+Sonuç: Sinyal kararsızsa flat kal, onaylıysa net BUY/SELL döndür.
+🧩 C) adaptive/trend_confirmation_filter
+Amaç: Trend dönüşlerinin gerçekten güçlü olup olmadığını tespit eder.
+Girdi: Trend flip (SuperTrend), RSI kesişimi, Hacim oranı
+Çıktı: True/False (onaylı mı değil mi)
+Mantık:
+if (SuperTrend.flip and abs(RSI_slope) > threshold and VolumeSpike.confirmed):
+    return True  # strong reversal
+else:
+    return False
+Yan piyasalarda “fake flip”’leri önler.
+RL ajanı bu sinyalin güven skorunu kullanarak reversal işlemlerine ağırlık verir.
+🧠 Pozisyon Akışı (Reversal Dahil)
+SuperTrend DOWN → BUY → SELL dönüşü:
+Long kapatılır → trend-confirmed flip → Short açılır.
+Arada 1 bar bekleme (cooldown) olabilir.
+Sideways market:
+Trend flip yok, EMA20-EMA50 arası <0.5% → sistem “HOLD” kalır.
+Fiyat stop-loss’a çarparsa:
+Bu “hard stop” sayılır → risk manager tetiklenir.
+Sistem cooldown’a geçmez, sadece istatistik güncellenir.
+System exit (indikasyonla kapanış):
+“System exit” ≠ “stop-loss.”
+RL ajan yeni sinyali bekler, flat modda gözlem yapar.
+📉 Risk & Cooldown Uyumu
+Kural	Etkisi	Açıklama
+DD ≥ 8 %	4h cooldown	Tüm coinlerde işlemler durur
+Günlük 10 hard SL	Gün sonuna kadar duraklat	Sadece yeni işlem engellenir
+7 ardışık coin kaybı	O coine ban	Diğerleri devam eder
+System exit	Etkilenmez	Stop sayılmaz, işlem kapanır
+🔁 Öğrenme Döngüsü (Coin & TF bazlı)
+RL ajan her coin ve TF için ayrı memory buffer tutar.
+Her buffer 3 işlemde quick, 20 işlemde deep retrain tetikler.
+Bayesian optimizer parametreleri coin + TF özelinde günceller.
+best_params.json ve best_timeframe.json sürekli güncel tutulur.
+📊 Performans Ölçütleri (v2.5)
+Metrik	Hedef	İzleme Modu
+Win Rate	> %55	Realtime dashboard
+Profit Factor	> 1.3	Haftalık rapor
+Sharpe	> 1.2	Aylık rapor
+Max DD	< %8	Günlük kontrol
+Trade Sayısı	> 1000 (6 ay)	Sistem logları
+🧩 Modüller Arası Veri Akışı (Zincir)
+Signal Generator ─▶ Signal Interpreter ─▶ Trend Confirmation Filter ─▶ Position State Manager ─▶ Risk Manager ─▶ RL Agent
+Her katman sadece bir sonrakine net bilgi verir (örneğin “BUY”, “SELL”, “HOLD”).
+Geri bildirim (reward, DD, stop event) yalnız RL ajanına gider.
+Böylece modüller bağımsız, ama senkronize çalışır.
+💾 Loglama ve İzleme
+Her pozisyon değişimi: entry_type, exit_reason, profit/loss, ATR_value, signal_confidence
+Stop eventleri ve cooldown’lar günlük rapora yazılır.
+Log’lar hem CSV hem JSON formatında saklanır (logs/trade_YYYYMMDD.csv).
+🚀 Sistem Özeti
+Özellik	Durum
+Coin bazlı optimizasyon	✅ Aktif
+Timeframe bazlı adaptasyon	✅ Aktif
+Reversal (Long→Short, Short→Long)	✅ Mantıklı & filtreli
+Sideways gürültü filtreleme	✅ Var
+Dynamic ATR SL	✅ Aktif
+System exit / Hard SL ayrımı	✅ Net
+Risk yönetimi çakışması	❌ Yok
+Cooldown / ban mantığı	✅ Dengeli
+Real-time demo mode	✅ Binance Testnet
+Multi-module sync	✅ Tüm katmanlar bağımsız ama koordine
