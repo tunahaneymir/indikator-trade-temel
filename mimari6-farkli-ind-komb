@@ -1,0 +1,139 @@
+AI TRADING SYSTEM ARCHITECTURE v2.7
+(Dual-Time Adaptive Strategy – 15m & 1h)
+⚙️ Genel Tanım
+Yeni sistem, iki bağımsız strateji motorunu (15m ve 1h) aynı anda çalıştırır.
+Her motor kendi indikatör setiyle, kendi optimizasyon alanında öğrenir, RL ajanları parametreleri paylaşmaz.
+Ama “Trade Manager” tüm pozisyonları tek portföy seviyesinde yönetir (yani net toplam risk %2 sınırını aşmaz).
+🧩 Katmanlar
+1️⃣ DATA LAYER
+data_sources = {
+  "feed": "Binance Testnet WebSocket",
+  "timeframes": ["15m", "1h"],
+  "coins": "Top 20 by market cap",
+  "cache": "90 days rolling buffer",
+  "execution_mode": "paper"
+}
+2️⃣ CORE ENGINE LAYER
+Artık iki farklı sinyal motoru var:
+core_modules = {
+  "signal_generators": {
+    "15m": "SqueezeMomentum + SuperTrend + RVOL",
+    "1h": "QQE MOD + ChandelierExit + RVOL"
+  },
+  "signal_interpreter": "multi-timeframe fusion",
+  "position_state_manager": "dual state machine (15m/1h)",
+  "risk_manager": "shared portfolio risk",
+  "rl_agent": "two-headed PPO model (per timeframe)"
+}
+🔍 15m Motor (Breakout Strategy)
+Amaç: Volatilite sıkışmalarında breakout yönünü yakalamak.
+Squeeze Momentum: sıkışma → genişleme
+SuperTrend: trend yön filtresi
+RVOL: yüksek hacim doğrulaması
+Sinyal mantığı:
+if squeeze == "FIRE_LONG" and supertrend == "UP" and rvol_ok:
+    signal = "BUY"
+elif squeeze == "FIRE_SHORT" and supertrend == "DOWN" and rvol_ok:
+    signal = "SELL"
+else:
+    signal = "HOLD"
+Optimizasyon parametreleri:
+"squeeze": {"length": [10, 30], "mult": [1.3, 2.0]},
+"supertrend": {"atr_period": [7, 14], "mult": [2.5, 4.0]},
+"rvol": {"lookback": [10, 25], "threshold": [1.3, 2.0]}
+🔍 1h Motor (Momentum-Trend Strategy)
+Amaç: Trend devamı ve güvenli çıkış.
+QQE MOD: momentum yön değişimi
+Chandelier Exit: dinamik ATR tabanlı takip stopu
+RVOL: işlem onayı
+Sinyal mantığı:
+if qqe == "UP" and rvol_ok:
+    signal = "BUY"
+elif qqe == "DOWN" and rvol_ok:
+    signal = "SELL"
+else:
+    signal = "HOLD"
+Risk/Exit mantığı:
+if price < chandelier_exit and trend == "DOWN":
+    close_position()
+Optimizasyon parametreleri:
+"qqe": {"rsi_period": [10, 20], "smoothing": [3, 6], "atr_mult": [2.0, 4.0]},
+"chandelier": {"lookback": [15, 30], "multiplier": [2.5, 4.0]},
+"rvol": {"lookback": [15, 30], "threshold": [1.4, 2.0]}
+3️⃣ LEARNING LAYER (RL + Adaptive Optimization)
+learning_system = {
+  "rl_agents": {
+    "15m": "PPO_Agent_ShortTerm",
+    "1h": "PPO_Agent_LongTerm"
+  },
+  "optimizer": "Bayesian search per timeframe",
+  "sync_interval": "weekly (parameter checkpoint share)"
+}
+RL ajanlar aynı veri tabanını (trade results) okur ama policy weights farklıdır.
+4️⃣ VISUALIZATION LAYER
+Her zaman dilimi ayrı raporlanır:
+visualization = {
+  "15m_report": "visuals/15m_trades/",
+  "1h_report": "visuals/1h_trades/",
+  "fusion_dashboard": "visuals/combined_metrics.html"
+}
+TradeVisualizer 2.0 artık iki ayrı renk kodu kullanır:
+🟩 15m işlemleri (breakout trades)
+🟦 1h işlemleri (trend trades)
+5️⃣ RISK MANAGEMENT
+Ortak risk kontrolü:
+risk_rules = {
+  "max_portfolio_risk": 0.02,
+  "max_drawdown": 0.08,
+  "cooldown": "30m per coin",
+  "max_daily_loss": "10 stoploss per day (total)",
+  "dual_trade_protection": "allow both 15m and 1h only if directions match"
+}
+Yani:
+Aynı coin’de hem 15m hem 1h pozisyon açılabilir yalnız yön aynıysa.
+Aksi halde küçük (short-term) pozisyon kapanır.
+→ Bu, çakışmayı engeller ama paralel stratejiyi korur.
+6️⃣ PERFORMANCE METRICS
+Zaman Dilimi	Hedef	Ölçüm Yöntemi
+15m	Win rate > 57%	Trade count & short DD
+1h	Profit factor > 1.4	Trend continuation
+Ortak	Sharpe > 1.3	Fusion report
+RL Metric	Episode reward growth	PPO logs
+7️⃣ SYSTEM PIPELINE
+DATA → (15m Engine)
+     ↘
+      ↘
+       SIGNAL INTERPRETER
+      ↗
+     ↗
+DATA → (1h Engine)
+        ↓
+   POSITION MANAGER
+        ↓
+   RISK MANAGER
+        ↓
+   RL LEARNING & VISUALIZER
+8️⃣ LOGGING & STORAGE
+logs/
+ ├── trades_15m.csv
+ ├── trades_1h.csv
+ ├── fusion_summary.csv
+ ├── visuals/15m_trades/
+ ├── visuals/1h_trades/
+ └── fusion_dashboard.html
+RL ajanlarının parametre geçmişi:
+/state/ppo_15m/
+ /state/ppo_1h/
+🧠 Genel Davranış Özeti
+15m motoru: kısa volatilite breakout’larını arar (hızlı giriş/çıkış).
+1h motoru: trendi sürdürür, stopları güvenli taşır.
+Çakışma kontrolü: yönler zıt ise kısa vadeli pozisyon iptal edilir.
+RL: her timeframe kendi başarısını optimize eder ama global risk ortak.
+Visual report: iki zaman dilimi ayrı renklerle çizilir, haftalık karşılaştırmalı analiz yapılır.
+💾 Kısa Notlar
+Bu yapı v2.6 üzerine oturur — eski single-strategy sistem korunur.
+Yeni sürüm “multi-agent, multi-timeframe” yapıdadır.
+Her modül bağımsız test edilebilir (ör. sadece 15m çalıştırmak mümkün).
+Claude tarafında sen sadece “tradebot_beta” altında core/signal_generator.py ve adaptive_parameters.py güncellemelerini test edeceksin.
+Hazır olduğunda Claude’a şu prompt’u verebilirsin:
+“Sistemi v2.7 dual-time adaptive yapıya geçiriyorum. 15m için SqueezeMomentum + SuperTrend + RVOL, 1h için QQE MOD + Chandelier Exit + RVOL kombinasyonlarını entegre et. core/signal_generator.py ve adaptive_parameters.py dosyalarını buna göre düzenle, mevcut mimariyi koru.”
