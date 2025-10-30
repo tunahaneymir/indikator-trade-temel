@@ -137,3 +137,50 @@ Her modül bağımsız test edilebilir (ör. sadece 15m çalıştırmak mümkün
 Claude tarafında sen sadece “tradebot_beta” altında core/signal_generator.py ve adaptive_parameters.py güncellemelerini test edeceksin.
 Hazır olduğunda Claude’a şu prompt’u verebilirsin:
 “Sistemi v2.7 dual-time adaptive yapıya geçiriyorum. 15m için SqueezeMomentum + SuperTrend + RVOL, 1h için QQE MOD + Chandelier Exit + RVOL kombinasyonlarını entegre et. core/signal_generator.py ve adaptive_parameters.py dosyalarını buna göre düzenle, mevcut mimariyi koru.”
+
+# adaptive/timeframe_selector.py
+
+class AdaptiveTimeframeSelector:
+    """
+    Coin bazlı en verimli timeframe'i belirler.
+    RL ödülleri + istatistiksel performans metriklerini birleştirir.
+    Haftalık olarak çalışır ve state/timeframe_preference.json dosyasını günceller.
+    """
+
+    def __init__(self, rl_metrics, trade_logs):
+        self.rl_metrics = rl_metrics       # PPO ajan ödül skorları
+        self.trade_logs = trade_logs       # 15m / 1h performans geçmişi
+        self.min_trades = 200              # minimum gözlem eşiği
+
+    def evaluate(self, coin):
+        data_15m = self.trade_logs.get(coin, {}).get("15m", [])
+        data_1h  = self.trade_logs.get(coin, {}).get("1h", [])
+        if len(data_15m) < self.min_trades or len(data_1h) < self.min_trades:
+            return "explore"  # veri azsa her ikisi de açık kalsın
+
+        # Basit örnek skor: WinRate * ProfitFactor * RL_Reward
+        def score(data, rl_reward):
+            win_rate = sum(1 for t in data if t["pnl"] > 0) / len(data)
+            profit_factor = abs(sum(t["pnl"] for t in data if t["pnl"] > 0)) / (
+                abs(sum(t["pnl"] for t in data if t["pnl"] < 0)) + 1e-9
+            )
+            return (win_rate * profit_factor) * rl_reward
+
+        score_15m = score(data_15m, self.rl_metrics[coin]["15m"])
+        score_1h  = score(data_1h,  self.rl_metrics[coin]["1h"])
+
+        if score_15m > score_1h * 1.1:
+            return "15m"
+        elif score_1h > score_15m * 1.1:
+            return "1h"
+        else:
+            return "dual"  # yakınsa ikisi de aktif kalsın
+
+    def update_preferences(self):
+        results = {}
+        for coin in self.trade_logs.keys():
+            results[coin] = self.evaluate(coin)
+        # json’a kaydet
+        with open("state/timeframe_preference.json", "w") as f:
+            import json; json.dump(results, f, indent=2)
+        return results
