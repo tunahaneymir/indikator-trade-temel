@@ -1,0 +1,127 @@
+AI TRADING SYSTEM ARCHITECTURE — v2.6 (Visual Edition)
+🎯 Amaç
+15m ve 1h zaman dilimlerinde çalışan, coin bazlı optimizasyon yapan, RL destekli,
+SuperTrend + MOST RSI + Volume Spike kombinasyonu ile işlem açan,
+ve her işlemin görsel çıktısını (TP/SL alanlı mum grafiği) kaydeden tam entegre akıllı sistem.
+🧩 Mimarî Katmanlar
+1️⃣ DATA LAYER
+Kaynak: Binance Testnet (gerçek zamanlı veri)
+Zaman dilimleri: 15m ve 1h
+Kapsam: Top 20 coin
+Depolama: 90 günlük cache, SQLite trade veritabanı
+Mod: execution_mode = 'paper'
+2️⃣ CORE ENGINE LAYER
+core_modules = {
+  "signal_generator": "SuperTrend + MOST RSI + Volume Spike",
+  "signal_interpreter": "3-lü onay sistemi (trend, momentum, hacim)",
+  "position_state_manager": "LONG/SHORT/FLAT state machine (reversal destekli)",
+  "trend_confirmation_filter": "False signal filtreleme",
+  "rl_agent": "PPO policy-gradient learner",
+  "risk_manager": "Dynamic ATR SL, DD, cooldown kontrolü"
+}
+3️⃣ ADAPTIVE LAYER
+Görev:
+Coin bazlı öğrenme ve indikatör parametre optimizasyonu (Bayesian + RL hibrit)
+Bileşenler:
+adaptive_parameter_optimizer → ATR, MOST, Volume parametre aralıklarını öğrenir
+retrain_scheduler → her 3 işlemde “quick retrain”, 20 işlemde “deep retrain”
+adaptive_filter_manager → trend & RSI sinyallerinde overfit riskini ölçer
+4️⃣ VISUALIZATION LAYER (Yeni!)
+Artık sadece performans raporu değil, grafiksel işlem çıktısı da üretiyor.
+visualization = {
+  "dashboard": "Real-time performance metrics",
+  "trade_visualizer": "PNG output with TP/SL shading",
+  "trade_reports": "Weekly HTML visual report",
+  "auto_cleanup": "Keep top 20 visuals, weekly rotation"
+}
+🎨 Trade Visualizer (Yeni Alt Modül)
+📁 visualization/trade_visualizer.py
+Fonksiyon:
+Her kapatılan işlemi mum grafiği üzerinde işaretleyip kaydeder.
+Görselde:
+Sarı çizgi → giriş fiyatı
+Mavi alan → hedef (take-profit)
+Gri alan → stop-loss
+Yeşil ok → entry noktası
+Kırmızı ok → exit noktası
+Başlık → coin adı + işlem sonucu + PnL yüzdesi
+Oluşan dosyalar:
+/visuals/trades/BTCUSDT_20251029_1530.png
+/visuals/trades/ETHUSDT_20251030_1200.png
+🔁 Entegrasyon Noktası:
+core/position_state_manager kapanışta otomatik tetikler:
+if trade_closed:
+    TradeVisualizer.plot_trade(df, entry_idx, exit_idx, entry_price, sl, tp, result, symbol)
+🧠 Raporlama:
+Her hafta en iyi 20 işlem PNG olarak tutulur, diğerleri silinir.
+HTML rapor (/visuals/report.html) otomatik oluşturulur:
+Trade başına PnL, tarih, coin
+Görsel önizleme
+Trend/volatilite istatistikleri
+🔍 Görsel Örnek Akış
+Durum:
+ETH/USDT, 1h timeframe
+SuperTrend buy → entry: 3,850
+SL: 3,780 (gri bölge)
+TP: 4,040 (mavi bölge)
+Exit: 4,015
+→ TradeVisualizer aşağıdaki PNG’yi kaydeder:
+🟩 ETHUSDT | WIN +4.3%
+📈 Entry: 3850 | Exit: 4015 | SL: 3780 | TP: 4040
+🕐 2025-10-29 12:00 → 2025-10-30 02:00
+5️⃣ LEARNING LAYER
+Her coin ve timeframe ayrı bellekle (buffer) öğrenir.
+Quick retrain (3 işlem), deep retrain (20 işlem).
+Bayesian optimizer RL ajanına feedback sağlar.
+Parametre setleri:
+best_params.json ve best_timeframe.json
+6️⃣ RISK MANAGEMENT
+Kural	Açıklama
+Position size	%2 risk sabit
+Max DD	%8 (soft limit)
+Günlük max SL	10 işlem
+Cooldown	Coin bazlı 30dk
+Reversal logic	Onaylı ters sinyalde yön değiştir
+System Exit	Stop loss olarak sayılmaz
+Hard Stop	ATR tabanlı, volatiliteyle dinamikleşir
+7️⃣ PERFORMANCE METRICS
+Metrik	Hedef	Ölçüm
+Win Rate	> %55	Günlük dashboard
+Profit Factor	> 1.3	Haftalık rapor
+Sharpe Ratio	> 1.2	Aylık analiz
+Total Trades	> 1000 (6 ay)	System logs
+Drawdown	< %8	Günlük takip
+8️⃣ SYSTEM PIPELINE
+Data Feed
+  ↓
+Signal Generator
+  ↓
+Signal Interpreter
+  ↓
+Trend Confirmation Filter
+  ↓
+Position State Manager
+  ↓
+Risk Manager
+  ↓
+RL Agent (Feedback)
+  ↓
+Trade Visualizer (on close)
+9️⃣ LOGGING & STORAGE
+Trade geçmişi: SQLite
+Günlük işlem raporu: /logs/trade_YYYYMMDD.csv
+Görseller: /visuals/trades/
+Rapor: /visuals/report.html
+Parametre geçmişi: /params/best_params.json
+🚀 Sistem Özeti
+Özellik	Durum
+Coin & TF bazlı optimizasyon	✅ Aktif
+Multi-module senkronizasyon	✅ Tamamlandı
+Reversal işlemleri	✅ Mantıklı & filtreli
+Sideways filtreleme	✅ EMA distance check
+Dynamic ATR SL	✅ Var
+Visual TP/SL shading	✅ Eklendi
+HTML rapor	✅ Otomatik
+RL + Bayesian optimizer	✅ Hibrit
+Demo mod (real-time)	✅ Binance Testnet
+Overlap trade conflict	❌ Yok
