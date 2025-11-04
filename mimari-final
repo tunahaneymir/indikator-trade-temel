@@ -1,2215 +1,1441 @@
-# 🚀 AI Trading System Architecture v4.1
-## Advanced RL/ML Paper Trading Bot with Adaptive RR & Full Lifecycle Management
+# 🚀 Yapay Zeka Destekli Trading Sistemi Mimarisi v4.1
+## Adaptif RR Sistemi ve Tam Yaşam Döngüsü Yönetimi ile İleri Seviye RL/ML Paper Trading Botu
 
 ---
 
-## 📋 Executive Summary
+## 📋 Yönetici Özeti
 
-**Sistem Adı:** Adaptive Multi-Timeframe Trading Intelligence (AMTTI)  
-**Versiyon:** 4.1 (Final Production Ready)  
+**Sistem Adı:** Adaptif Çok Zaman Dilimlı Trading Zekası (AÇDZTZ)  
+**Versiyon:** 4.1 (Final Üretim Hazır)  
 **Süre:** 6 Aylık Paper Trade → Mainnet  
-**Hedef:** Self-evolving, cost-aware, lifecycle-managed trading system  
-**Yeni Özellikler:** 
-- Adaptive RR System
-- Complete Operations Layer
-- Learning Dashboard
-- **Coin Selection Agent (NEW)**
-- **Complete Development Roadmap (NEW)**
+**Hedef:** Kendi kendini geliştiren, maliyet farkında, yaşam döngüsü yönetimli trading sistemi
 
-### Version Evolution
-| Version | Key Addition | Status |
-|---------|-------------|--------|
-| v3.0 | Advanced RL/ML with multi-timeframe | Opus 4.1 work |
-| v4.0 | Adaptive RR System + Operations Layer | Added Layer 4.5 & 9 |
-| v4.1 | Coin Selection Agent + Dev Roadmap | **CURRENT - Production Ready** |
+**Yeni Özellikler (v4.1):**
+- ✅ Adaptif RR Sistemi (bağlam farkında öğrenme)
+- ✅ Eksiksiz Operasyon Katmanı (shutdown, backup, monitoring)
+- ✅ Öğrenme Dashboard'u
+- ✅ Coin Seçim Ajanı (ML destekli, 6 kriter)
+- ✅ Eksiksiz Geliştirme Yol Haritası (10 hafta)
 
-### Architecture at a Glance
-- **9 Layers** (Data → Execution → Signals → Risk → RR → ML → RL → Regime → Portfolio → Operations)
-- **Coin Selection Agent** (ML-enhanced scoring with 6 criteria)
-- **Adaptive RR System** (Context-aware learning, 0.001-0.05 adaptive LR)
-- **Complete Operations** (Trade history, shutdown, backup, dashboards)
-- **10-week development plan** (8 phases, clear dependencies)
-- **Progressive 6-month training** (5 → 10 → 20 coins)
+### Versiyon Evrimi
+| Versiyon | Eklenen Özellik | Durum |
+|---------|-----------------|-------|
+| v3.0 | İleri seviye RL/ML çoklu zaman dilimi | Opus 4.1 çalışması |
+| v4.0 | Adaptif RR + Operasyon Katmanı | Katman 4.5 & 9 eklendi |
+| v4.1 | Coin Seçim Ajanı + Geliştirme Planı | **GÜNCEL - Üretim Hazır** |
+
+### Mimari Bakışta
+- **9 Ana Katman** (Veri → Yürütme → Sinyaller → Risk → RR → ML → RL → Rejim → Portföy → Operasyonlar)
+- **Coin Seçim Ajanı** (ML destekli skorlama, 6 kriter)
+- **Adaptif RR Sistemi** (Bağlam farkında öğrenme, 0.001-0.05 adaptif LR)
+- **Eksiksiz Operasyonlar** (Trade geçmişi, kapatma, yedekleme, dashboard'lar)
+- **10 haftalık geliştirme planı** (8 faz, açık bağımlılıklar)
+- **Kademeli 6 aylık eğitim** (5 → 10 → 20 coin)
 
 ---
 
-## 🏗️ System Architecture Layers
+## 🏗️ Sistem Mimarisi Katmanları
 
-### Layer 1: Data Infrastructure
+### Katman 1: Veri Altyapısı
 
 ```yaml
-data_pipeline:
-  sources:
-    primary: "Binance Spot/Futures WebSocket"
-    secondary: "REST API for historical data"
-    orderbook: "Level 2 depth (20 levels)"
+veri_hatti:
+  kaynaklar:
+    birincil: "Binance Spot/Futures WebSocket"
+    ikincil: "Geçmiş veri için REST API"
+    orderbook: "Seviye 2 derinlik (20 seviye)"
   
-  collection:
-    timeframes: ["1m", "5m", "15m", "1h", "4h"]
-    coins: "Dynamic via Coin Selection Agent (Layer 1.5)"
-    coin_count: "5 → 10 → 20 (progressive)"
-    update_frequency: "Real-time (WebSocket)"
+  toplama:
+    zaman_dilimleri: ["1m", "5m", "15m", "1h", "4h"]
+    coinler: "Coin Seçim Ajanı ile dinamik (Katman 1.5)"
+    coin_sayisi: "5 → 10 → 20 (kademeli)"
+    guncelleme_sikliği: "Gerçek zamanlı (WebSocket)"
     
-  storage:
-    hot_storage: "Redis (24h cache)"
-    warm_storage: "PostgreSQL (90 days)"
-    cold_storage: "Parquet files (historical)"
+  depolama:
+    sicak_depo: "Redis (24 saat önbellek)"
+    ilik_depo: "PostgreSQL (90 gün)"
+    soguk_depo: "Parquet dosyaları (geçmiş)"
     
-  preprocessing:
-    outlier_detection: "IQR + Z-score"
-    missing_data: "Forward fill → Linear interpolation"
-    normalization: "RobustScaler per feature"
+  on_isleme:
+    aykiri_tespit: "IQR + Z-skoru"
+    eksik_veri: "İleri doldurma → Doğrusal interpolasyon"
+    normalizasyon: "Özellik başına RobustScaler"
 ```
 
-### Layer 1.5: Coin Selection Agent (NEW)
+### Katman 1.5: Coin Seçim Ajanı (YENİ)
 
 ```yaml
-coin_selection_agent:
-  purpose: "Dynamic multi-criteria coin filtering and portfolio construction"
+coin_secim_ajani:
+  amac: "Dinamik çok kriterli coin filtreleme ve portföy oluşturma"
   
-  universe_definition:
-    exchange: "Binance Spot + Futures"
-    base_filter:
-      - "24h volume > $10M"
-      - "Market cap > $100M"
-      - "Listed > 90 days"
-      - "Not stablecoin"
-      - "Trading pair: /USDT"
+  evren_tanimi:
+    borsa: "Binance Spot + Futures"
+    temel_filtre:
+      - "24s hacim > $10M"
+      - "Piyasa değeri > $100M"
+      - "Listelenme > 90 gün"
+      - "Stablecoin değil"
+      - "Trading çifti: /USDT"
       
-    blacklist:
-      - "Known scam coins"
-      - "Highly manipulated coins"
-      - "Coins with ongoing legal issues"
-      update_frequency: "weekly"
+    kara_liste:
+      - "Bilinen dolandırıcılık coinleri"
+      - "Yüksek manipülasyonlu coinler"
+      - "Devam eden yasal sorunlu coinler"
+      guncelleme_sikliği: "haftalık"
       
-  scoring_system:
-    components:
-      liquidity_score:
-        weight: 0.25
-        metrics:
-          - "24h volume"
-          - "Order book depth (bid-ask 1%)"
-          - "Spread tightness"
-        formula: "weighted_avg([volume_rank, depth_rank, spread_rank])"
+  skorlama_sistemi:
+    bilesenler:
+      likidite_skoru:
+        agirlik: 0.25
+        metrikler:
+          - "24s hacim"
+          - "Order book derinliği (bid-ask 1%)"
+          - "Spread sıkılığı"
+        formul: "agirlikli_ort([hacim_siralama, derinlik_siralama, spread_siralama])"
         
-      volatility_score:
-        weight: 0.20
-        metrics:
-          - "ATR(14) normalized"
-          - "Bollinger Band width"
-          - "Historical volatility (30d)"
-        formula: "normalize(atr * 0.4 + bb_width * 0.3 + hist_vol * 0.3)"
-        target: "Medium volatility (0.4-0.7 range)"
+      volatilite_skoru:
+        agirlik: 0.20
+        metrikler:
+          - "ATR(14) normalize"
+          - "Bollinger Band genişliği"
+          - "Geçmiş volatilite (30g)"
+        formul: "normalize(atr * 0.4 + bb_width * 0.3 + hist_vol * 0.3)"
+        hedef: "Orta volatilite (0.4-0.7 aralığı)"
         
-      trend_strength_score:
-        weight: 0.20
-        metrics:
-          - "ADX(14) value"
-          - "Directional movement"
-          - "EMA alignment (9/21/50)"
-        formula: "adx_norm * 0.5 + direction * 0.3 + ema_alignment * 0.2"
+      trend_gucu_skoru:
+        agirlik: 0.20
+        metrikler:
+          - "ADX(14) değeri"
+          - "Yönlü hareket"
+          - "EMA hizalama (9/21/50)"
+        formul: "adx_norm * 0.5 + yon * 0.3 + ema_hizalama * 0.2"
         
-      momentum_score:
-        weight: 0.15
-        metrics:
-          - "RSI(14) position"
+      momentum_skoru:
+        agirlik: 0.15
+        metrikler:
+          - "RSI(14) konumu"
           - "MACD histogram"
-          - "Price vs MA distance"
-        formula: "weighted_avg([rsi_score, macd_score, ma_distance])"
+          - "Fiyat vs MA mesafesi"
+        formul: "agirlikli_ort([rsi_skor, macd_skor, ma_mesafe])"
         
-      volume_profile_score:
-        weight: 0.10
-        metrics:
-          - "RVOL (relative volume)"
-          - "Volume trend (increasing/decreasing)"
-          - "Accumulation/Distribution"
-        formula: "rvol * 0.5 + volume_trend * 0.3 + ad_line * 0.2"
+      hacim_profil_skoru:
+        agirlik: 0.10
+        metrikler:
+          - "RVOL (göreceli hacim)"
+          - "Hacim trendi (artış/azalış)"
+          - "Biriktirme/Dağıtım"
+        formul: "rvol * 0.5 + hacim_trend * 0.3 + ad_cizgi * 0.2"
         
-      correlation_score:
-        weight: 0.10
-        metrics:
-          - "Correlation to BTC"
-          - "Correlation to existing portfolio"
-          - "Sector diversity"
-        formula: "diversity_bonus - portfolio_correlation_penalty"
-        purpose: "Reduce portfolio correlation"
+      korelasyon_skoru:
+        agirlik: 0.10
+        metrikler:
+          - "BTC ile korelasyon"
+          - "Mevcut portföy ile korelasyon"
+          - "Sektör çeşitliliği"
+        formul: "cesitlilik_bonusu - portfoy_korelasyon_cezasi"
+        amac: "Portföy korelasyonunu azalt"
         
-  ml_enhanced_selection:
+  ml_destekli_secim:
     model: "LightGBM Ranker"
     
-    features:
-      technical: [
-        "All scoring metrics above",
-        "Historical performance",
-        "Volatility regime"
+    ozellikler:
+      teknik: [
+        "Yukarıdaki tüm skorlama metrikleri",
+        "Geçmiş performans",
+        "Volatilite rejimi"
       ]
       
-      fundamental: [
-        "Market cap rank",
-        "Volume rank",
-        "Exchange listing count"
+      temel: [
+        "Piyasa değeri sıralaması",
+        "Hacim sıralaması",
+        "Borsa listeleme sayısı"
       ]
       
-      sentiment: [
-        "Social media mentions (optional)",
-        "News sentiment (optional)",
-        "Whale activity (on-chain)"
+      duygu: [
+        "Sosyal medya bahsedilmeleri (opsiyonel)",
+        "Haber duygusu (opsiyonel)",
+        "Balina aktivitesi (on-chain)"
       ]
       
-    training:
-      target: "Sharpe ratio of coin (next 7 days)"
-      validation: "Walk-forward (monthly)"
-      retrain_frequency: "weekly"
+    egitim:
+      hedef: "Coin'in Sharpe oranı (sonraki 7 gün)"
+      dogrulama: "İleri yürüme (aylık)"
+      yeniden_egitim_sikliği: "haftalık"
       
-    prediction:
-      output: "Expected Sharpe score"
-      combine_with: "Rule-based scores"
-      final_rank: "0.6 * ml_score + 0.4 * rule_score"
+    tahmin:
+      cikti: "Beklenen Sharpe skoru"
+      birlestir: "Kural tabanlı skorlar ile"
+      final_siralama: "0.6 * ml_skor + 0.4 * kural_skor"
       
-  selection_logic:
-    phase_based_selection:
-      phase_1_foundation:
-        coin_count: 5
-        strategy: "Conservative (high liquidity, low volatility)"
-        filters:
-          - "Top 50 by market cap"
-          - "Volatility < 0.6"
-          - "Liquidity score > 0.7"
+  secim_mantiği:
+    faz_tabanli_secim:
+      faz_1_temel:
+        coin_sayisi: 5
+        strateji: "Muhafazakar (yüksek likidite, düşük volatilite)"
+        filtreler:
+          - "Piyasa değerine göre ilk 50"
+          - "Volatilite < 0.6"
+          - "Likidite skoru > 0.7"
           
-      phase_2_expansion:
-        coin_count: 10
-        strategy: "Balanced (medium risk)"
-        filters:
-          - "Top 100 by market cap"
-          - "Volatility 0.4-0.7"
-          - "Trend strength > 0.5"
+      faz_2_genisleme:
+        coin_sayisi: 10
+        strateji: "Dengeli (orta risk)"
+        filtreler:
+          - "Piyasa değerine göre ilk 100"
+          - "Volatilite 0.4-0.7"
+          - "Trend gücü > 0.5"
           
-      phase_3_optimization:
-        coin_count: 20
-        strategy: "Aggressive (high opportunity)"
-        filters:
-          - "Top 200 by market cap"
-          - "Volatility 0.5-0.8"
-          - "ML score > 0.6"
+      faz_3_optimizasyon:
+        coin_sayisi: 20
+        strateji: "Agresif (yüksek fırsat)"
+        filtreler:
+          - "Piyasa değerine göre ilk 200"
+          - "Volatilite 0.5-0.8"
+          - "ML skoru > 0.6"
           
-  portfolio_construction:
-    method: "Dynamic rebalancing"
+  portfoy_olusturma:
+    yontem: "Dinamik dengeleme"
     
-    allocation_weights:
-      equal_weight: false
-      score_weighted: true
-      formula: "position_weight = coin_score / sum(all_scores)"
+    tahsis_agirliklari:
+      esit_agirlik: false
+      skor_agirlikli: true
+      formul: "pozisyon_agirligi = coin_skor / toplam(tum_skorlar)"
       
-    constraints:
-      min_coin_allocation: 0.02  # 2% min
-      max_coin_allocation: 0.15  # 15% max
-      target_coin_count: "Phase dependent"
+    kisitlar:
+      min_coin_tahsisi: 0.02  # 2% min
+      max_coin_tahsisi: 0.15  # 15% max
+      hedef_coin_sayisi: "Faz bağımlı"
       
-    rebalancing:
-      frequency: "weekly"
-      triggers:
-        - "Coin score drops below threshold"
-        - "New high-score coin emerges"
-        - "Correlation spike detected"
-      criteria:
-        - "Minimum improvement: 5% score gain"
-        - "Transaction cost consideration"
-        - "Don't exit profitable positions"
+    yeniden_dengeleme:
+      siklik: "haftalık"
+      tetikleyiciler:
+        - "Coin skoru eşiğin altına düşerse"
+        - "Yeni yüksek skorlu coin ortaya çıkarsa"
+        - "Korelasyon artışı tespit edilirse"
+      kriterler:
+        - "Minimum iyileştirme: %5 skor kazancı"
+        - "İşlem maliyeti dikkate alınması"
+        - "Karlı pozisyonlardan çıkma"
         
-  monitoring:
-    real_time:
-      - "Coin score evolution"
-      - "Liquidity changes"
-      - "Correlation matrix updates"
+  izleme:
+    gercek_zamanli:
+      - "Coin skor evrimi"
+      - "Likidite değişimleri"
+      - "Korelasyon matrisi güncellemeleri"
       
-    daily:
-      - "Score ranking changes"
-      - "New coin candidates"
-      - "Blacklist updates"
+    gunluk:
+      - "Skor sıralama değişimleri"
+      - "Yeni coin adayları"
+      - "Kara liste güncellemeleri"
       
-    weekly:
-      - "Portfolio performance attribution"
-      - "Coin selection accuracy"
-      - "ML model performance"
+    haftalik:
+      - "Portföy performans atfı"
+      - "Coin seçim doğruluğu"
+      - "ML model performansı"
       
-  implementation:
-    update_frequency: "Every 4 hours"
-    computation_time: "<5 minutes"
+  uygulama:
+    guncelleme_sikliği: "Her 4 saatte bir"
+    hesaplama_suresi: "<5 dakika"
     
-    pipeline:
-      step_1: "Fetch universe data (all eligible coins)"
-      step_2: "Calculate technical scores"
-      step_3: "Run ML predictions"
-      step_4: "Combine scores"
-      step_5: "Apply filters & constraints"
-      step_6: "Generate rebalancing orders (if needed)"
-      step_7: "Update dashboard"
+    hat:
+      adim_1: "Evren verisi çek (tüm uygun coinler)"
+      adim_2: "Teknik skorları hesapla"
+      adim_3: "ML tahminlerini çalıştır"
+      adim_4: "Skorları birleştir"
+      adim_5: "Filtreleri ve kısıtları uygula"
+      adim_6: "Yeniden dengeleme emirleri oluştur (gerekirse)"
+      adim_7: "Dashboard'u güncelle"
       
-    database:
-      table: "coin_scores"
-      columns:
-        - "timestamp"
-        - "symbol"
-        - "liquidity_score"
-        - "volatility_score"
-        - "trend_score"
-        - "momentum_score"
-        - "volume_score"
-        - "correlation_score"
-        - "ml_score"
-        - "final_score"
-        - "rank"
-        - "selected"
-      retention: "90 days"
+    veritabani:
+      tablo: "coin_skorlari"
+      kolonlar:
+        - "zaman_damgasi"
+        - "sembol"
+        - "likidite_skoru"
+        - "volatilite_skoru"
+        - "trend_skoru"
+        - "momentum_skoru"
+        - "hacim_skoru"
+        - "korelasyon_skoru"
+        - "ml_skoru"
+        - "final_skor"
+        - "siralama"
+        - "secildi"
+      saklama: "90 gün"
 ```
 
-### Layer 2: Execution & Cost Model
+### Katman 2: Yürütme ve Maliyet Modeli
 
 ```yaml
-execution_engine:
-  order_types:
-    primary: "POST-ONLY Limit Orders"
-    fallback: "Market Orders (emergency only)"
+yurutme_motoru:
+  emir_turleri:
+    birincil: "POST-ONLY Limit Emirleri"  # Maker ücretleri
+    yedek: "Market Emirleri"              # Sadece acil durum
     
-  cost_model:
-    fees:
-      maker: 0.001  # 0.1%
-      taker: 0.001  # 0.1%
-      vip_levels: [0.0009, 0.00085, 0.0008]
+  maliyet_modeli:
+    ucretler:
+      maker: 0.001  # %0.1
+      taker: 0.001  # %0.1
+      vip_seviyeleri: [0.0009, 0.00085, 0.0008]  # Hacim bazlı
       
-    slippage_model:
-      base: 0.0005  # 0.05%
-      volatility_multiplier: "ATR(14) * 0.1"
-      volume_impact: "order_size / avg_volume_1h * 0.01"
+    kayma_modeli:
+      temel: 0.0005  # %0.05
+      volatilite_carpani: "ATR(14) * 0.1"
+      hacim_etkisi: "emir_boyutu / ort_hacim_1s * 0.01"
       
-    spread_cost:
-      calculation: "(ask - bid) / 2"
-      max_acceptable: 0.002  # 0.2%
+    spread_maliyeti:
+      hesaplama: "(ask - bid) / 2"
+      max_kabul_edilebilir: 0.002  # %0.2
       
-  latency_simulator:
-    api_delay: "50-200ms (random)"
-    processing: "10-30ms"
-    total_max: "500ms"
+  gecikme_simulatoru:
+    api_gecikmesi: "50-200ms (rastgele)"
+    isleme: "10-30ms"
+    toplam_max: "500ms"
 ```
 
-### Layer 3: Signal Generation System
+### Katman 3: Sinyal Üretim Sistemi
 
 ```yaml
-signal_generators:
-  primary_indicators:
+sinyal_ureticileri:
+  birincil_indikatorler:
     trend:
-      - name: "SuperTrend"
-        params: {period: [7, 14], multiplier: [2.0, 4.0]}
-      - name: "MOST"
-        params: {period: [9, 21], percent: [1.0, 3.0]}
+      - isim: "SuperTrend"
+        parametreler: {periyod: [7, 14], carpan: [2.0, 4.0]}
+      - isim: "MOST"
+        parametreler: {periyod: [9, 21], yuzde: [1.0, 3.0]}
         
     momentum:
-      - name: "QQE MOD"
-        params: {rsi: [14, 21], smoothing: [5, 9]}
-      - name: "Squeeze Momentum"
-        params: {bb_period: 20, kc_period: 20, mom_period: 12}
+      - isim: "QQE MOD"
+        parametreler: {rsi: [14, 21], yumusatma: [5, 9]}
+      - isim: "Squeeze Momentum"
+        parametreler: {bb_periyod: 20, kc_periyod: 20, mom_periyod: 12}
         
-    volume:
-      - name: "RVOL"
-        params: {lookback: [14, 30], threshold: [1.5, 2.5]}
-      - name: "CVD (Cumulative Volume Delta)"
-        params: {period: 24}
+    hacim:
+      - isim: "RVOL"
+        parametreler: {geriye_bakis: [14, 30], esik: [1.5, 2.5]}
+      - isim: "CVD (Kümülatif Hacim Deltası)"
+        parametreler: {periyod: 24}
         
-    volatility:
-      - name: "ATR"
-        params: {period: [14, 21]}
-      - name: "Bollinger Bands"
-        params: {period: 20, std: [2, 2.5]}
+    volatilite:
+      - isim: "ATR"
+        parametreler: {periyod: [14, 21]}
+      - isim: "Bollinger Bantları"
+        parametreler: {periyod: 20, std: [2, 2.5]}
         
-  signal_fusion:
-    method: "Weighted voting with market regime context"
-    weights:
-      bull_market: {trend: 0.4, momentum: 0.3, volume: 0.3}
-      bear_market: {trend: 0.5, momentum: 0.2, volume: 0.3}
-      sideways: {momentum: 0.4, volume: 0.3, volatility: 0.3}
+  sinyal_birlestirme:
+    yontem: "Piyasa rejimi bağlamında ağırlıklı oylama"
+    agirliklar:
+      boga_piyasasi: {trend: 0.4, momentum: 0.3, hacim: 0.3}
+      ayi_piyasasi: {trend: 0.5, momentum: 0.2, hacim: 0.3}
+      yatay: {momentum: 0.4, hacim: 0.3, volatilite: 0.3}
 ```
 
-### Layer 4: Risk Management Framework
+### Katman 4: Risk Yönetim Çerçevesi
 
 ```yaml
-risk_management:
-  position_sizing:
-    base_method: "Volatility-Adjusted Kelly Criterion"
-    formula: "Kelly * 0.25 * (1 / ATR_normalized)"
-    constraints:
-      min_position: 0.001  # 0.1% portfolio
-      max_position: 0.03   # 3% portfolio
-      max_portfolio_heat: 0.06  # 6% total risk
+risk_yonetimi:
+  pozisyon_boyutlandirma:
+    temel_yontem: "Volatilite Ayarlı Kelly Kriteri"
+    formul: "Kelly * 0.25 * (1 / ATR_normalize)"
+    kisitlar:
+      min_pozisyon: 0.001  # %0.1 portföy
+      max_pozisyon: 0.03   # %3 portföy
+      max_portfoy_isisi: 0.06  # %6 toplam risk
       
   stop_loss:
-    primary: "ATR-based dynamic"
-    calculation: "entry - (ATR * multiplier)"
-    multiplier_range: [1.5, 3.0]
-    max_loss_per_trade: 0.02  # 2%
+    birincil: "ATR bazlı dinamik"
+    hesaplama: "giris - (ATR * carpan)"
+    carpan_araligi: [1.5, 3.0]
+    trade_basina_max_kayip: 0.02  # %2
     
-  take_profit:
-    method: "Adaptive Risk-Reward Ratio (Layer 4.5)"
+  kar_al:
+    yontem: "Adaptif Risk-Ödül Oranı (Katman 4.5)"
     minimum_rr: 1.1
-    maximum_rr: 1.9
-    dynamic_adjustment: "Signal + Market + RL based"
-    partial_exits: [0.5, 0.75, 1.0]
+    maksimum_rr: 1.9
+    dinamik_ayarlama: "Sinyal + Piyasa + RL bazlı"
+    kismi_cikislar: [0.5, 0.75, 1.0]
     
-  correlation_management:
-    max_correlated_positions: 3
-    correlation_threshold: 0.7
-    portfolio_beta_limit: 1.5
+  korelasyon_yonetimi:
+    max_iliskili_pozisyon: 3
+    korelasyon_esigi: 0.7
+    portfoy_beta_limiti: 1.5
     
-  drawdown_control:
-    daily_loss_limit: 0.03  # 3%
-    weekly_loss_limit: 0.06  # 6%
-    monthly_loss_limit: 0.10  # 10%
-    recovery_mode_threshold: 0.08
+  dusus_kontrolu:
+    gunluk_kayip_limiti: 0.03  # %3
+    haftalik_kayip_limiti: 0.06  # %6
+    aylik_kayip_limiti: 0.10  # %10
+    kurtarma_modu_esigi: 0.08  # %8 DD'de muhafazakara gec
 ```
 
-### Layer 4.5: Adaptive RR System (NEW - Integrated)
+### Katman 4.5: Adaptif RR Sistemi (YENİ - Entegre)
 
 ```yaml
-adaptive_rr_system:
-  version: "2.0 - Fully Adaptive"
-  status: "Production Ready"
+adaptif_rr_sistemi:
+  versiyon: "2.0 - Tamamen Adaptif"
+  durum: "Üretim Hazır"
   
-  core_components:
-    signal_confidence:
-      indicators: ["SuperTrend", "MOST", "QQE", "RVOL"]
-      weights: [0.3, 0.3, 0.2, 0.2]
-      confidence_range: [0.0, 1.0]
+  cekirdek_bilesenler:
+    sinyal_guveni:
+      indikatorler: ["SuperTrend", "MOST", "QQE", "RVOL"]
+      agirliklar: [0.3, 0.3, 0.2, 0.2]
+      guven_araligi: [0.0, 1.0]
       
-    market_condition:
-      trend_strength: "normalize(abs(most - supertrend))"
-      volatility: "normalize(atr / price)"
-      formula: "0.5 * (1 - trend_strength) + 0.5 * volatility"
+    piyasa_durumu:
+      trend_gucu: "normalize(abs(most - supertrend))"
+      volatilite: "normalize(atr / fiyat)"
+      formul: "0.5 * (1 - trend_gucu) + 0.5 * volatilite"
       
-    rl_optimization:
-      algorithm: "Adaptive Gradient Descent"
-      learning_rate: "Context-aware (see below)"
-      update_frequency: "After each trade"
+    rl_optimizasyonu:
+      algoritma: "Adaptif Gradyan İnişi"
+      ogrenme_hizi: "Bağlam farkında (aşağıya bakın)"
+      guncelleme_sikliği: "Her trade sonrası"
       
-  adaptive_learning:
-    learning_rate_calculation:
-      components:
-        volatility_component:
-          formula: "clip(volatility * 0.05, 0.001, 0.03)"
-          weight: 1.0
+  adaptif_ogrenme:
+    ogrenme_hizi_hesaplama:
+      bilesenler:
+        volatilite_bileseni:
+          formul: "clip(volatilite * 0.05, 0.001, 0.03)"
+          agirlik: 1.0
           
-        performance_component:
-          win_rate_high: {threshold: ">60%", multiplier: 0.5}
-          win_rate_low: {threshold: "<40%", multiplier: 1.5}
-          win_rate_mid: {default: 1.0}
+        performans_bileseni:
+          kazanma_orani_yuksek: {esik: ">%60", carpan: 0.5}
+          kazanma_orani_dusuk: {esik: "<%40", carpan: 1.5}
+          kazanma_orani_orta: {varsayilan: 1.0}
           
-        confidence_component:
-          formula: "0.5 + (signal_confidence * 0.5)"
-          purpose: "Lower confidence = slower learning"
+        guven_bileseni:
+          formul: "0.5 + (sinyal_guveni * 0.5)"
+          amac: "Düşük güven = daha yavaş öğrenme"
           
-        time_decay:
-          formula: "max(0.5, 1.0 - (days_active / 180))"
-          purpose: "System slows down as it matures"
+        zaman_azalimi:
+          formul: "max(0.5, 1.0 - (aktif_gun / 180))"
+          amac: "Sistem olgunlaştıkça yavaşlar"
           
-      final_formula: |
-        learning_rate = (
-          volatility_component * 
-          performance_multiplier * 
-          confidence_multiplier * 
-          time_decay
+      final_formul: |
+        ogrenme_hizi = (
+          volatilite_bileseni * 
+          performans_carpani * 
+          guven_carpani * 
+          zaman_azalimi
         )
-        learning_rate = clip(learning_rate, 0.001, 0.05)
+        ogrenme_hizi = clip(ogrenme_hizi, 0.001, 0.05)
         
-  reward_system:
-    pnl_normalization:
-      formula: "log1p(abs(pnl)) * sign(pnl)"
+  odul_sistemi:
+    pnl_normalizasyonu:
+      formul: "log1p(abs(pnl)) * sign(pnl)"
       
-    rr_efficiency:
-      formula: "min(1.0, rr_achieved / rr_target)"
+    rr_verimliligi:
+      formul: "min(1.0, rr_ulasildi / rr_hedef)"
       
-    time_penalty:
-      formula: "max(0.5, 1.0 - (hold_hours / 168))"
-      purpose: "Penalize positions held > 1 week"
+    zaman_cezasi:
+      formul: "max(0.5, 1.0 - (tutma_saat / 168))"
+      amac: "1 haftadan fazla tutulan pozisyonları cezalandır"
       
-    final_reward:
-      formula: "pnl_norm * rr_efficiency * time_penalty"
+    final_odul:
+      formul: "pnl_norm * rr_verimliligi * zaman_cezasi"
       
-  update_mechanism:
-    asymmetric_updates:
-      profit_scenario:
-        target: 1.2
-        formula: "lr * (1.2 - current_rl) * 0.5"
-        speed: "Moderate (0.5x)"
+  guncelleme_mekanizmasi:
+    asimetrik_guncellemeler:
+      kar_senaryosu:
+        hedef: 1.2
+        formul: "lr * (1.2 - mevcut_rl) * 0.5"
+        hiz: "Orta (0.5x)"
         
-      loss_scenario:
-        target: 0.8
-        formula: "-lr * (current_rl - 0.8) * 0.3"
-        speed: "Slower (0.3x)"
+      kayip_senaryosu:
+        hedef: 0.8
+        formul: "-lr * (mevcut_rl - 0.8) * 0.3"
+        hiz: "Daha yavaş (0.3x)"
         
-    constraints:
-      rl_factor_range: [0.7, 1.3]
-      rr_range: [1.1, 1.9]
+    kisitlar:
+      rl_faktor_araligi: [0.7, 1.3]
+      rr_araligi: [1.1, 1.9]
       
-  stabilization:
-    window_size: 20
-    volatility_threshold: 0.4
-    freeze_duration: "24 hours"
-    freeze_condition: "std(rr_changes[-20:]) > 0.4"
+  stabilizasyon:
+    pencere_boyutu: 20
+    volatilite_esigi: 0.4
+    dondurma_suresi: "24 saat"
+    dondurma_kosulu: "std(rr_degisimler[-20:]) > 0.4"
     
-  persistence:
-    state_files:
-      weights: "state/rr_weights.json"
-      history: "state/rr_learning_history.json"
-    save_frequency: "After each update"
-    recovery: "Auto-load on startup"
+  kalicilik:
+    durum_dosyalari:
+      agirliklar: "state/rr_weights.json"
+      gecmis: "state/rr_learning_history.json"
+    kayit_sikliği: "Her güncelleme sonrası"
+    kurtarma: "Başlangıçta otomatik yükle"
     
-  formula_summary: |
-    # Final RR Calculation
-    signal_conf = weighted_avg([st, qqe, most, rvol])
-    market_cond = 0.5*(1-trend_str) + 0.5*volatility
+  formul_ozeti: |
+    # Final RR Hesaplama
+    sinyal_guven = agirlikli_ort([st, qqe, most, rvol])
+    piyasa_dur = 0.5*(1-trend_guc) + 0.5*volatilite
     
-    rr_signal = 1.5 - (signal_conf * 0.4)
-    rr_market = rr_signal + (market_cond * 0.3)
-    rr_final = rr_market * rr_weights["rl_factor"]
+    rr_sinyal = 1.5 - (sinyal_guven * 0.4)
+    rr_piyasa = rr_sinyal + (piyasa_dur * 0.3)
+    rr_final = rr_piyasa * rr_weights["rl_factor"]
     rr_final = clip(rr_final, 1.1, 1.9)
 ```
 
-### Layer 5: Machine Learning Pipeline
+### Katman 5: Makine Öğrenimi Hattı
 
 ```yaml
-ml_framework:
-  feature_engineering:
-    technical_features:
-      - "Price action patterns (candlestick)"
-      - "Support/Resistance levels"
-      - "Trend strength indicators"
-      - "Volume profile"
+ml_cercevesi:
+  ozellik_muhendisligi:
+    teknik_ozellikler:
+      - "Fiyat aksiyon kalıpları (candlestick)"
+      - "Destek/Direnç seviyeleri"
+      - "Trend gücü indikatörleri"
+      - "Hacim profili"
       
-    market_microstructure:
-      - "Order book imbalance"
-      - "Spread dynamics"
-      - "Trade flow toxicity"
+    piyasa_mikroyapisi:
+      - "Order book dengesizliği"
+      - "Spread dinamikleri"
+      - "Trade akış toksisitesi"
       
-    temporal_features:
-      - "Hour of day"
-      - "Day of week"
-      - "Monthly seasonality"
+    zamansal_ozellikler:
+      - "Günün saati"
+      - "Haftanın günü"
+      - "Aylık mevsimsellik"
       
-  preprocessing:
-    scaling: "RobustScaler"
-    feature_selection: "Recursive Feature Elimination"
-    dimensionality_reduction: "PCA (preserve 95% variance)"
+  on_isleme:
+    olcekleme: "RobustScaler"
+    ozellik_secimi: "Özyinelemeli Özellik Eliminasyonu"
+    boyut_azaltma: "PCA (%95 varyans koru)"
     
-  model_architecture:
-    ensemble:
+  model_mimarisi:
+    topluluk:
       - model: "LightGBM"
-        weight: 0.3
-        task: "Direction prediction"
+        agirlik: 0.3
+        gorev: "Yön tahmini"
         
       - model: "LSTM"
-        weight: 0.3
-        task: "Price movement magnitude"
+        agirlik: 0.3
+        gorev: "Fiyat hareket büyüklüğü"
         
       - model: "Random Forest"
-        weight: 0.2
-        task: "Volatility prediction"
+        agirlik: 0.2
+        gorev: "Volatilite tahmini"
         
       - model: "XGBoost"
-        weight: 0.2
-        task: "Volume prediction"
+        agirlik: 0.2
+        gorev: "Hacim tahmini"
         
-  validation_strategy:
-    method: "Time Series Cross-Validation"
-    train_size: 0.6
-    validation_size: 0.2
-    test_size: 0.2
-    walk_forward_windows: 10
-    purged_embargo: "2 hours"
+  dogrulama_stratejisi:
+    yontem: "Zaman Serisi Çapraz Doğrulama"
+    egitim_boyutu: 0.6
+    dogrulama_boyutu: 0.2
+    test_boyutu: 0.2
+    ileri_yuruyen_pencereler: 10
+    temizlenmis_ambargo: "2 saat"
 ```
 
-### Layer 6: Reinforcement Learning System
+### Katman 6: Pekiştirmeli Öğrenme Sistemi
 
 ```yaml
-rl_architecture:
-  algorithm: "Proximal Policy Optimization (PPO)"
+rl_mimarisi:
+  algoritma: "Proximal Policy Optimization (PPO)"
   
-  state_space:
-    market_features: 50
-    portfolio_features: 10
-    temporal_features: 5
-    rr_system_features: 3  # NEW: rl_factor, rr_volatility, learning_rate
-    total_dimension: 68
+  durum_uzayi:
+    piyasa_ozellikleri: 50
+    portfoy_ozellikleri: 10
+    zamansal_ozellikler: 5
+    rr_sistem_ozellikleri: 3  # YENİ: rl_factor, rr_volatilite, ogrenme_hizi
+    toplam_boyut: 68
     
-  action_space:
-    type: "Discrete"
-    actions: ["strong_buy", "buy", "hold", "sell", "strong_sell"]
-    position_sizes: [0.5, 1.0, 1.5, 2.0]
+  aksiyon_uzayi:
+    tip: "Ayrik"
+    aksiyonlar: ["guclu_al", "al", "tut", "sat", "guclu_sat"]
+    pozisyon_boyutlari: [0.5, 1.0, 1.5, 2.0]  # Temel boyut carpani
     
-  reward_function:
-    components:
-      - name: "realized_pnl"
-        weight: 0.4
+  odul_fonksiyonu:
+    bilesenler:
+      - isim: "gerceklesen_pnl"
+        agirlik: 0.4
         
-      - name: "sharpe_ratio"
-        weight: 0.3
+      - isim: "sharpe_orani"
+        agirlik: 0.3
         
-      - name: "drawdown_penalty"
-        weight: -0.2
+      - isim: "dusus_cezasi"
+        agirlik: -0.2
         
-      - name: "transaction_cost"
-        weight: -0.1
+      - isim: "islem_maliyeti"
+        agirlik: -0.1
         
-  hyperparameters:
-    learning_rate: 0.0001
-    batch_size: 256
-    epochs: 10
-    clip_range: 0.2
+  hiperparametreler:
+    ogrenme_hizi: 0.0001
+    batch_boyutu: 256
+    epoch: 10
+    clip_araligi: 0.2
     gamma: 0.99
     gae_lambda: 0.95
     
-  training_schedule:
-    warm_up_episodes: 1000
-    exploration_decay: "linear(1.0 → 0.1)"
-    update_frequency: "every 100 trades"
+  egitim_takvimi:
+    isinma_bolum: 1000
+    kesif_azalimi: "dogrusal(1.0 → 0.1)"
+    guncelleme_sikliği: "her 100 trade"
 ```
 
-### Layer 7: Market Regime Detection
+### Katman 7: Piyasa Rejimi Tespiti
 
 ```yaml
-regime_detection:
-  models:
+rejim_tespiti:
+  modeller:
     hmm:
-      type: "Hidden Markov Model"
-      states: ["bull", "bear", "sideways", "volatile"]
-      features: ["returns", "volume", "volatility"]
+      tip: "Gizli Markov Modeli"
+      durumlar: ["boga", "ayi", "yatay", "oynnak"]
+      ozellikler: ["getiriler", "hacim", "volatilite"]
       
-    clustering:
-      type: "DBSCAN + K-Means"
-      features: ["trend_strength", "volatility", "volume_profile"]
+    kumeleme:
+      tip: "DBSCAN + K-Means"
+      ozellikler: ["trend_gucu", "volatilite", "hacim_profili"]
       
-  regime_specific_params:
-    bull:
-      position_size_multiplier: 1.2
-      rr_multiplier: 1.1  # NEW: Higher RR targets in bull
-      preferred_indicators: ["trend_following"]
+  rejim_ozel_parametreler:
+    boga:
+      pozisyon_boyut_carpani: 1.2
+      rr_carpani: 1.1  # YENİ: Boğa piyasasında daha yüksek RR hedefleri
+      tercih_edilen_indikatorler: ["trend_takibi"]
       
-    bear:
-      position_size_multiplier: 0.7
-      rr_multiplier: 0.9  # NEW: Lower RR targets in bear
-      preferred_indicators: ["mean_reversion"]
+    ayi:
+      pozisyon_boyut_carpani: 0.7
+      rr_carpani: 0.9  # YENİ: Ayı piyasasında daha düşük RR hedefleri
+      tercih_edilen_indikatorler: ["ortalamaya_donme"]
       
-    sideways:
-      position_size_multiplier: 0.5
-      rr_multiplier: 1.0
-      range_trading_mode: true
+    yatay:
+      pozisyon_boyut_carpani: 0.5
+      rr_carpani: 1.0
+      aralik_trading_modu: true
       
-    volatile:
-      position_size_multiplier: 0.3
-      rr_multiplier: 0.85  # NEW: More conservative RR
-      wider_stops: 1.5
+    oynnak:
+      pozisyon_boyut_carpani: 0.3
+      rr_carpani: 0.85  # YENİ: Daha muhafazakar RR
+      genis_stoplar: 1.5
 ```
 
-### Layer 8: Portfolio Management
+### Katman 8: Portföy Yönetimi
 
 ```yaml
-portfolio_optimization:
-  allocation_method: "Hierarchical Risk Parity"
+portfoy_optimizasyonu:
+  tahsis_yontemi: "Hiyerarşik Risk Paritesi"
   
-  constraints:
-    max_positions: 10
-    min_position_size: 0.001
-    max_position_size: 0.05
-    max_sector_exposure: 0.3
+  kisitlar:
+    max_pozisyon: 10
+    min_pozisyon_boyutu: 0.001
+    max_pozisyon_boyutu: 0.05
+    max_sektor_maruziyet: 0.3
     
-  rebalancing:
-    frequency: "daily"
-    threshold: 0.1  # 10% drift
-    method: "minimize_transaction_costs"
+  yeniden_dengeleme:
+    siklik: "günlük"
+    esik: 0.1  # %10 sapma
+    yontem: "islem_maliyetlerini_minimize_et"
     
-  correlation_matrix:
-    update_frequency: "hourly"
-    lookback_period: "30 days"
-    method: "exponential_weighted"
+  korelasyon_matrisi:
+    guncelleme_sikliği: "saatlik"
+    geriye_bakis_periyodu: "30 gün"
+    yontem: "ustel_agirlikli"
     
-  performance_attribution:
-    - "asset_allocation"
-    - "security_selection"
-    - "interaction_effect"
-    - "currency_effect"
+  performans_atfi:
+    - "varlik_tahsisi"
+    - "menkul_kiymet_secimi"
+    - "etkilesim_etkisi"
+    - "para_birimi_etkisi"
 ```
 
-### Layer 9: System Operations & Lifecycle Management (NEW)
+### Katman 9: Sistem Operasyonları ve Yaşam Döngüsü Yönetimi (YENİ)
 
 ```yaml
-system_operations:
+sistem_operasyonlari:
   
   # ========================
-  # TRADE HISTORY MANAGER
+  # TRADE GEÇMİŞİ YÖNETİCİSİ
   # ========================
-  trade_history_manager:
-    purpose: "Complete trade lifecycle tracking and analytics"
+  trade_gecmis_yoneticisi:
+    amac: "Eksiksiz trade yaşam döngüsü izleme ve analitik"
     
-    database_schema:
-      table: "trades"
-      columns:
+    veritabani_semasi:
+      tablo: "trades"
+      kolonlar:
         - trade_id: "UUID PRIMARY KEY"
-        - symbol: "VARCHAR(20)"
-        - side: "ENUM(LONG, SHORT)"
-        - entry_price: "DECIMAL(20,8)"
-        - exit_price: "DECIMAL(20,8)"
-        - entry_time: "TIMESTAMP"
-        - exit_time: "TIMESTAMP"
-        - quantity: "DECIMAL(20,8)"
-        - pnl_absolute: "DECIMAL(20,8)"
-        - pnl_percent: "DECIMAL(10,4)"
-        - pnl_net: "DECIMAL(20,8)"  # After fees
-        - fees_paid: "DECIMAL(20,8)"
-        - slippage: "DECIMAL(10,4)"
-        - rr_target: "DECIMAL(5,2)"
-        - rr_achieved: "DECIMAL(5,2)"
+        - sembol: "VARCHAR(20)"
+        - taraf: "ENUM(LONG, SHORT)"
+        - giris_fiyat: "DECIMAL(20,8)"
+        - cikis_fiyat: "DECIMAL(20,8)"
+        - giris_zaman: "TIMESTAMP"
+        - cikis_zaman: "TIMESTAMP"
+        - miktar: "DECIMAL(20,8)"
+        - pnl_mutlak: "DECIMAL(20,8)"
+        - pnl_yuzde: "DECIMAL(10,4)"
+        - pnl_net: "DECIMAL(20,8)"  # Ücretler sonrası
+        - odenen_ucretler: "DECIMAL(20,8)"
+        - kayma: "DECIMAL(10,4)"
+        - rr_hedef: "DECIMAL(5,2)"
+        - rr_ulasildi: "DECIMAL(5,2)"
         - stop_loss: "DECIMAL(20,8)"
-        - take_profit: "DECIMAL(20,8)"
-        - exit_reason: "ENUM(RR_TARGET, STOP_LOSS, SIGNAL_REVERSE, MANUAL, EMERGENCY)"
-        - hold_duration_seconds: "INTEGER"
-        - signal_confidence: "JSONB"
-        - market_conditions: "JSONB"
-        - rl_state: "JSONB"
-        - mae: "DECIMAL(10,4)"  # Maximum Adverse Excursion
-        - mfe: "DECIMAL(10,4)"  # Maximum Favorable Excursion
+        - kar_al: "DECIMAL(20,8)"
+        - cikis_nedeni: "ENUM(RR_HEDEF, STOP_LOSS, SINYAL_TERSI, MANUEL, ACIL)"
+        - tutma_suresi_saniye: "INTEGER"
+        - sinyal_guveni: "JSONB"
+        - piyasa_kosullari: "JSONB"
+        - rl_durumu: "JSONB"
+        - mae: "DECIMAL(10,4)"  # Maksimum Olumsuz Sapma
+        - mfe: "DECIMAL(10,4)"  # Maksimum Olumlu Sapma
         
-      indexes:
-        - "symbol, entry_time"
-        - "exit_reason, pnl_percent"
-        - "entry_time DESC"
-        - "symbol, exit_reason"
+      indeksler:
+        - "sembol, giris_zaman"
+        - "cikis_nedeni, pnl_yuzde"
+        - "giris_zaman DESC"
+        - "sembol, cikis_nedeni"
         
-    storage:
-      primary: "PostgreSQL"
-      analytics: "InfluxDB (time-series)"
-      cache: "Redis (24h hot data)"
+    depolama:
+      birincil: "PostgreSQL"
+      analitik: "InfluxDB (zaman serisi)"
+      onbellek: "Redis (24s sıcak veri)"
       
-    analytics_functions:
-      - win_rate_by_timeframe()
-      - avg_rr_by_signal_type()
-      - pnl_distribution_analysis()
-      - signal_accuracy_tracker()
-      - market_condition_performance()
-      - mae_mfe_analysis()
+    analitik_fonksiyonlar:
+      - zaman_dilimine_gore_kazanma_orani()
+      - sinyal_turune_gore_ort_rr()
+      - pnl_dagilis_analizi()
+      - sinyal_dogruluk_takipci()
+      - piyasa_durumu_performans()
+      - mae_mfe_analizi()
       
   # ========================
-  # SHUTDOWN MANAGER
+  # KAPATMA YÖNETİCİSİ
   # ========================
-  shutdown_manager:
-    purpose: "Graceful system shutdown with state preservation"
+  kapatma_yoneticisi:
+    amac: "Durum koruma ile zarif sistem kapatma"
     
-    trigger_signals:
+    tetikleme_sinyalleri:
       - "SIGINT (Ctrl+C)"
-      - "SIGTERM (kill command)"
-      - "API connection loss > 60s"
-      - "Unhandled exception in main loop"
+      - "SIGTERM (kill komutu)"
+      - "API bağlantısı kaybı > 60s"
+      - "Ana döngüde işlenmemiş istisna"
       
-    shutdown_sequence:
-      step_1:
-        action: "Stop accepting new signals"
-        timeout: "0s"
+    kapatma_sirasi:
+      adim_1:
+        islem: "Yeni sinyalleri kabul etmeyi durdur"
+        zaman_asimi: "0s"
         
-      step_2:
-        action: "Cancel all pending limit orders"
-        method: "Binance REST API cancel_all_orders()"
-        timeout: "5s"
+      adim_2:
+        islem: "Bekleyen tüm limit emirlerini iptal et"
+        yontem: "Binance REST API cancel_all_orders()"
+        zaman_asimi: "5s"
         
-      step_3:
-        decision: "Handle open positions"
-        options:
-          close_all:
-            condition: "config.shutdown_close_positions == true"
-            method: "Market orders (1% slippage tolerance)"
+      adim_3:
+        karar: "Açık pozisyonları işle"
+        secenekler:
+          tumunu_kapat:
+            kosul: "config.kapatmada_pozisyonlari_kapat == true"
+            yontem: "Market emirleri (%1 kayma toleransı)"
             
-          keep_positions:
-            condition: "config.shutdown_close_positions == false"
-            action: "Save position state to recovery file"
-            file: "state/open_positions.json"
+          pozisyonlari_tut:
+            kosul: "config.kapatmada_pozisyonlari_kapat == false"
+            islem: "Pozisyon durumunu kurtarma dosyasına kaydet"
+            dosya: "state/open_positions.json"
             
-      step_4:
-        action: "Flush all state files"
-        files:
+      adim_4:
+        islem: "Tüm durum dosyalarını temizle"
+        dosyalar:
           - "state/rr_weights.json"
           - "state/rr_learning_history.json"
           - "state/trade_history_buffer.json"
           - "state/model_checkpoint.pkl"
           - "state/rl_experience_replay.pkl"
           - "state/open_positions.json"
-        timeout: "10s"
+        zaman_asimi: "10s"
         
-      step_5:
-        action: "Close database connections"
-        databases:
+      adim_5:
+        islem: "Veritabanı bağlantılarını kapat"
+        veritabanlari:
           - "PostgreSQL (trades DB)"
-          - "Redis (cache)"
-          - "InfluxDB (metrics)"
-        timeout: "5s"
+          - "Redis (önbellek)"
+          - "InfluxDB (metrikler)"
+        zaman_asimi: "5s"
         
-      step_6:
-        action: "Generate shutdown report"
-        contents:
-          - "Active positions (if kept)"
-          - "Last 10 trades summary"
-          - "System uptime"
-          - "Performance snapshot"
-          - "RR system state"
-        save_to: "logs/shutdown_report_{timestamp}.json"
+      adim_6:
+        islem: "Kapatma raporu oluştur"
+        icerik:
+          - "Aktif pozisyonlar (tutulmuşsa)"
+          - "Son 10 trade özeti"
+          - "Sistem çalışma süresi"
+          - "Performans metrikleri anlık görüntüsü"
+          - "RR sistem durumu"
+        kaydet: "logs/kapatma_raporu_{zaman_damgasi}.json"
         
-      step_7:
-        action: "Send notifications"
-        channels:
-          - "Telegram (if enabled)"
-          - "Email (if enabled)"
-          - "Discord webhook (if enabled)"
-        message: "System shutdown completed"
+      adim_7:
+        islem: "Bildirim gönder"
+        kanallar:
+          - "Telegram (etkinse)"
+          - "E-posta (etkinse)"
+          - "Discord webhook (etkinse)"
+        mesaj: "Sistem kapatma tamamlandı"
         
-    emergency_shutdown:
-      triggers:
-        - "Memory usage > 90%"
-        - "Disk space < 1GB"
-        - "API connection lost > 60s"
-        - "Critical exception in trading loop"
+    acil_kapatma:
+      tetikleyiciler:
+        - "Bellek kullanımı > %90"
+        - "Disk alanı < 1GB"
+        - "API bağlantısı kayıp > 60s"
+        - "Trading döngüsünde kritik istisna"
         
-      action: "Force close all positions + immediate state save"
-      max_timeout: "30s"
+      islem: "Tüm pozisyonları zorla kapat + acil durum kaydı"
+      max_zaman_asimi: "30s"
       
   # ========================
-  # BACKUP MANAGER
+  # YEDEKLEME YÖNETİCİSİ
   # ========================
-  backup_manager:
-    purpose: "Automated backup and disaster recovery"
+  yedekleme_yoneticisi:
+    amac: "Otomatik yedekleme ve afet kurtarma"
     
-    automatic_backup:
-      schedules:
-        hourly:
-          frequency: "Every hour"
-          type: "Incremental"
-          files: ["state/", "logs/current_day/"]
-          retention: "48 hours"
+    otomatik_yedekleme:
+      zamanlamalar:
+        saatlik:
+          siklik: "Her saat"
+          tip: "Artımsal"
+          dosyalar: ["state/", "logs/guncel_gun/"]
+          saklama: "48 saat"
           
-        daily:
-          frequency: "Every day at 00:00 UTC"
-          type: "Full"
-          files: ["state/", "logs/", "models/"]
-          retention: "30 days"
+        gunluk:
+          siklik: "Her gün 00:00 UTC"
+          tip: "Tam"
+          dosyalar: ["state/", "logs/", "models/"]
+          saklama: "30 gün"
           
-        weekly:
-          frequency: "Every Sunday 00:00 UTC"
-          type: "Archive"
-          files: ["Everything"]
-          compression: "gzip"
-          retention: "6 months"
+        haftalik:
+          siklik: "Her Pazar 00:00 UTC"
+          tip: "Arşiv"
+          dosyalar: ["Her şey"]
+          sikistirma: "gzip"
+          saklama: "6 ay"
           
-    storage_locations:
-      local:
-        path: "/backups/"
-        structure: "backups/YYYY-MM-DD_HH-MM-SS/"
+    depolama_konumlari:
+      yerel:
+        yol: "/backups/"
+        yapi: "backups/YYYY-AA-GG_SS-DD-SS/"
         
-      cloud:
-        provider: "AWS S3 / Google Cloud Storage"
-        bucket: "trading-bot-backups"
-        encryption: "AES-256"
-        region: "eu-central-1"
+      bulut:
+        saglayici: "AWS S3 / Google Cloud Storage"
+        kova: "trading-bot-yedekleri"
+        sifreleme: "AES-256"
+        bolge: "eu-central-1"
         
-    recovery:
-      auto_recovery:
-        on_startup: true
-        check_files:
+    kurtarma:
+      otomatik_kurtarma:
+        baslangicta: true
+        kontrol_dosyalari:
           - "state/rr_weights.json"
           - "state/open_positions.json"
           - "state/model_checkpoint.pkl"
-        restore_from: "latest_backup"
+        geri_yukle: "en_son_yedek"
         
-      manual_recovery:
-        command: "python bot.py --restore-from=2025-01-04_12-00-00"
-        validation_steps:
-          - "File integrity check (MD5)"
-          - "Model version compatibility"
-          - "Position state validation"
-          - "RR system state verification"
+      manuel_kurtarma:
+        komut: "python bot.py --geri-yukle-tarih=2025-01-04_12-00-00"
+        dogrulama_adimlari:
+          - "Dosya bütünlük kontrolü (MD5)"
+          - "Model sürüm uyumluluğu"
+          - "Pozisyon durumları doğrulama"
+          - "RR sistem durumu doğrulama"
           
   # ========================
-  # LEARNING DASHBOARD
+  # ÖĞRENME DASHBOARD'U
   # ========================
-  learning_dashboard:
-    purpose: "Real-time RL/ML learning progress monitoring"
+  ogrenme_dashboard:
+    amac: "Gerçek zamanlı RL/ML öğrenme ilerleme izleme"
     
-    technology:
-      framework: "Plotly Dash + Streamlit"
-      update_method: "WebSocket (real-time)"
+    teknoloji:
+      cerceve: "Plotly Dash + Streamlit"
+      guncelleme_yontemi: "WebSocket (gerçek zamanlı)"
       port: 8051
-      url: "http://localhost:8051/learning"
+      url: "http://localhost:8051/ogrenme"
       
-    real_time_metrics:
-      rr_evolution:
-        chart_type: "Line chart with rolling avg"
-        data: "rr_weights.rl_factor over time"
-        window: "1 week rolling"
-        alert: "If std > 0.4"
+    gercek_zamanli_metrikler:
+      rr_evrimi:
+        grafik_turu: "Çizgi grafik (yuvarlanan ort ile)"
+        veri: "rr_weights.rl_factor zaman içinde"
+        pencere: "1 hafta yuvarlanan"
+        alarm: "Std > 0.4 ise"
         
-      signal_accuracy:
-        chart_type: "Heatmap"
-        dimensions: "Indicator x Market Regime"
-        metric: "Win rate"
-        update: "After each trade"
+      sinyal_dogrulugu:
+        grafik_turu: "Isı haritası"
+        boyutlar: "İndikatör x Piyasa Rejimi"
+        metrik: "Kazanma oranı"
+        guncelleme: "Her trade sonrası"
         
-      reward_distribution:
-        chart_type: "Histogram + KDE"
-        data: "RL rewards (last 500 trades)"
-        analysis: "Reward drift detection"
+      odul_dagilimi:
+        grafik_turu: "Histogram + KDE"
+        veri: "RL ödülleri (son 500 trade)"
+        analiz: "Ödül kayması tespiti"
         
-      learning_rate_trends:
-        chart_type: "Multi-line"
-        lines: ["Actual LR", "Volatility component", "Performance component"]
-        purpose: "Understand learning dynamics"
+      ogrenme_hizi_trendleri:
+        grafik_turu: "Çoklu çizgi"
+        cizgiler: ["Gerçek LR", "Volatilite bileşeni", "Performans bileşeni"]
+        amac: "Öğrenme dinamiklerini anla"
         
-    daily_reports:
-      - learning_velocity:
-          metric: "abs(rr_factor_change) per day"
-          target: "< 0.05 (stable learning)"
+    gunluk_raporlar:
+      - ogrenme_hizi:
+          metrik: "abs(rr_faktor_degisim) gün başına"
+          hedef: "< 0.05 (stabil öğrenme)"
           
-      - exploration_exploitation:
-          metric: "% of exploratory trades"
-          target: "Linear decay 80% → 20%"
+      - kesif_istismar:
+          metrik: "% keşifsel trade'ler"
+          hedef: "Doğrusal azalma %80 → %20"
           
-      - model_drift:
-          metric: "Prediction accuracy vs baseline"
-          alert: "If drops > 10%"
+      - model_kayma:
+          metrik: "Tahmin doğruluğu vs temel"
+          alarm: "%10'dan fazla düşerse"
           
-    weekly_analysis:
-      - feature_importance_evolution:
-          visualization: "Sankey diagram"
-          track: "Feature weight changes"
+    haftalik_analiz:
+      - ozellik_onem_evrimi:
+          gorsellestirme: "Sankey diyagramı"
+          takip: "Özellik ağırlık değişimleri"
           
-      - market_regime_adaptation:
-          metrics:
-            - "Position size adjustments"
-            - "RR target changes"
-            - "Indicator weight shifts"
+      - piyasa_rejim_adaptasyonu:
+          metrikler:
+            - "Pozisyon boyutu ayarlamaları"
+            - "RR hedef değişimleri"
+            - "İndikatör ağırlık kaymaları"
             
-      - comparative_performance:
-          compare: "Before/after learning"
-          metrics: ["Win rate", "Sharpe", "Max DD"]
+      - karsilastirmali_performans:
+          karsilastir: "Öğrenme öncesi/sonrası"
+          metrikler: ["Kazanma oranı", "Sharpe", "Max DD"]
           
-    monthly_reports:
+    aylik_raporlar:
       format: "PDF + HTML"
-      sections:
-        - "Executive Summary"
-        - "Learning Phase Analysis"
-        - "Performance Attribution"
-        - "Feature Importance Trends"
-        - "Hyperparameter Evolution"
-        - "Failure Mode Analysis"
-        - "Next Month Recommendations"
+      bolumler:
+        - "Yönetici Özeti"
+        - "Öğrenme Faz Analizi"
+        - "Performans Atfı"
+        - "Özellik Önem Trendleri"
+        - "Hiperparametre Evrimi"
+        - "Hata Modu Analizi"
+        - "Gelecek Ay Önerileri"
         
   # ========================
-  # VISUAL DASHBOARD
+  # GÖRSEL DASHBOARD
   # ========================
-  visual_dashboard:
-    purpose: "Real-time trading operations monitoring"
+  gorsel_dashboard:
+    amac: "Gerçek zamanlı trading operasyon izleme"
     
-    technology:
-      primary: "Grafana (existing metrics)"
-      custom: "Plotly Dash (trading-specific)"
-      ports:
+    teknoloji:
+      birincil: "Grafana (mevcut metrikler)"
+      ozel: "Plotly Dash (trading'e özel)"
+      portlar:
         grafana: 3000
-        custom: 8050
+        ozel: 8050
         
-    pages:
-      overview:
-        widgets:
-          - "Real-time PnL gauge"
-          - "Open positions table"
-          - "Recent trades (last 20)"
-          - "System health indicators"
-          - "Portfolio heat map"
+    sayfalar:
+      genel_bakis:
+        widget:
+          - "Gerçek zamanlı PnL göstergesi"
+          - "Açık pozisyon tablosu"
+          - "Son trade'ler (son 20)"
+          - "Sistem sağlık indikatörleri"
+          - "Portföy ısı haritası"
           
-      signals:
-        widgets:
-          - "Signal strength heatmap (all coins)"
-          - "Indicator alignment visualization"
-          - "Entry opportunity scanner"
-          - "Signal confidence distribution"
+      sinyaller:
+        widget:
+          - "Sinyal gücü ısı haritası (tüm coinler)"
+          - "İndikatör hizalama görselleştirmesi"
+          - "Giriş fırsat tarayıcı"
+          - "Sinyal güven dağılımı"
           
       risk:
-        widgets:
-          - "Portfolio heat gauge (current/max)"
-          - "Correlation matrix (live)"
-          - "Drawdown chart (real-time)"
-          - "Position size distribution"
-          - "Stop-loss visualization"
+        widget:
+          - "Portföy ısı göstergesi (mevcut/max)"
+          - "Korelasyon matrisi (canlı)"
+          - "Düşüş grafiği (gerçek zamanlı)"
+          - "Pozisyon boyutu dağılımı"
+          - "Stop-loss görselleştirme"
           
-      performance:
-        widgets:
-          - "Equity curve (cumulative)"
-          - "PnL by strategy type"
-          - "Win rate trends (rolling)"
-          - "RR achievement distribution"
-          - "Sharpe ratio evolution"
+      performans:
+        widget:
+          - "Equity eğrisi (kümülatif)"
+          - "Strateji türüne göre PnL"
+          - "Kazanma oranı trendleri (yuvarlanan)"
+          - "RR ulaşım dağılımı"
+          - "Sharpe oranı evrimi"
           
-      rr_system:  # NEW PAGE
-        widgets:
-          - "RR evolution chart (rl_factor)"
-          - "Learning rate dynamics"
-          - "Reward distribution"
-          - "Signal vs Market contribution"
-          - "Stabilization events timeline"
+      rr_sistemi:  # YENİ SAYFA
+        widget:
+          - "RR evrimi grafiği (rl_factor)"
+          - "Öğrenme hızı dinamikleri"
+          - "Ödül dağılımı"
+          - "Sinyal vs Piyasa katkısı"
+          - "Stabilizasyon olayları zaman çizelgesi"
           
-      system:
-        widgets:
-          - "CPU / RAM / Disk usage"
-          - "API latency histogram"
-          - "Error log viewer (last 100)"
-          - "Backup status"
-          - "Database metrics"
+      sistem:
+        widget:
+          - "CPU / RAM / Disk kullanımı"
+          - "API gecikme histogramı"
+          - "Hata log görüntüleyici (son 100)"
+          - "Yedekleme durumu"
+          - "Veritabanı metrikleri"
           
   # ========================
-  # MONITORING & ALERTS
+  # İZLEME VE ALARMLAR
   # ========================
-  monitoring:
-    health_checks:
-      frequency: "Every 30s"
-      checks:
-        - "API connection"
-        - "Database connectivity"
-        - "Redis availability"
-        - "Disk space > 5GB"
-        - "Memory usage < 85%"
-        - "Trading loop alive"
+  izleme:
+    saglik_kontrolleri:
+      siklik: "Her 30s"
+      kontroller:
+        - "API bağlantısı"
+        - "Veritabanı bağlanabilirliği"
+        - "Redis erişilebilirliği"
+        - "Disk alanı > 5GB"
+        - "Bellek kullanımı < %85"
+        - "Trading döngüsü canlı"
         
-    alerts:
-      critical:
-        - trigger: "API connection lost > 60s"
-          action: "Emergency shutdown + Telegram alert"
+    alarmlar:
+      kritik:
+        - tetikleyici: "API bağlantısı kayıp > 60s"
+          islem: "Acil kapatma + Telegram alarmı"
           
-        - trigger: "Drawdown > 10%"
-          action: "Halt trading + Email + SMS"
+        - tetikleyici: "Düşüş > %10"
+          islem: "Trading durdur + E-posta + SMS"
           
-        - trigger: "Win rate < 30% (last 50 trades)"
-          action: "Switch to paper mode + Alert"
+        - tetikleyici: "Kazanma oranı < %30 (son 50 trade)"
+          islem: "Paper moda geç + Alarm"
           
-      warning:
-        - trigger: "RR volatility > 0.4"
-          action: "Freeze RR updates + Log"
+      uyari:
+        - tetikleyici: "RR volatilitesi > 0.4"
+          islem: "RR güncellemelerini dondur + Log"
           
-        - trigger: "Consecutive losses > 5"
-          action: "Reduce position sizes 30%"
+        - tetikleyici: "Ardışık kayıplar > 5"
+          islem: "Pozisyon boyutlarını %30 azalt"
           
-      info:
-        - trigger: "New backup completed"
-          action: "Log only"
+      bilgi:
+        - tetikleyici: "Yeni yedek tamamlandı"
+          islem: "Sadece log"
           
-        - trigger: "Model retrained"
-          action: "Dashboard notification"
+        - tetikleyici: "Model yeniden eğitildi"
+          islem: "Dashboard bildirimi"
 ```
 
 ---
 
-## 📊 Progressive 6-Month Training Schedule
+## 📊 Kademeli 6 Aylık Eğitim Takvimi
 
-### Month 1-2: Foundation Phase
+### Ay 1-2: Temel Faz
 ```yaml
-phase_1:
-  goals:
-    - "System stability & uptime"
-    - "Data pipeline validation"
-    - "Basic signal testing"
-    - "RR system initialization"
+faz_1:
+  hedefler:
+    - "Sistem stabilitesi ve çalışma süresi"
+    - "Veri hattı doğrulama"
+    - "Temel sinyal testleri"
+    - "RR sistem başlatma"
     
-  configuration:
-    active_coins: 5
-    position_size: 0.005  # 0.5%
-    max_daily_trades: 10
-    exploration_rate: 0.8
-    rr_learning_rate: 0.02  # Higher initially
+  konfigurasy on:
+    aktif_coinler: 5
+    pozisyon_boyutu: 0.005  # %0.5
+    max_gunluk_trade: 10
+    kesif_orani: 0.8
+    rr_ogrenme_hizi: 0.02  # Başlangıçta daha yüksek
     
-  ml_settings:
-    model_complexity: "simple"
-    feature_count: 20
-    retrain_frequency: "weekly"
+  ml_ayarlari:
+    model_karmasikligi: "basit"
+    ozellik_sayisi: 20
+    yeniden_egitim_sikliği: "haftalık"
     
-  success_metrics:
-    uptime: ">99%"
-    data_quality: ">95%"
-    execution_success: ">90%"
-    rr_system_stable: "No freezes"
+  basari_metrikleri:
+    calisma_suresi: ">%99"
+    veri_kalitesi: ">%95"
+    yurutme_basarisi: ">%90"
+    rr_sistem_stabil: "Donma yok"
 ```
 
-### Month 3-4: Expansion Phase
+### Ay 3-4: Genişleme Fazı
 ```yaml
-phase_2:
-  goals:
-    - "Multi-timeframe integration"
-    - "ML model validation"
-    - "RR adaptation monitoring"
+faz_2:
+  hedefler:
+    - "Çoklu zaman dilimi entegrasyonu"
+    - "ML model doğrulama"
+    - "RR adaptasyon izleme"
     
-  configuration:
-    active_coins: 10
-    position_size: 0.01  # 1%
-    max_daily_trades: 25
-    exploration_rate: 0.5
-    rr_learning_rate: 0.01  # Adaptive takes over
+  konfigurasy on:
+    aktif_coinler: 10
+    pozisyon_boyutu: 0.01  # %1
+    max_gunluk_trade: 25
+    kesif_orani: 0.5
+    rr_ogrenme_hizi: 0.01  # Adaptif devreye girer
     
-  ml_settings:
-    model_complexity: "medium"
-    feature_count: 50
-    ensemble_active: true
-    retrain_frequency: "3 days"
+  ml_ayarlari:
+    model_karmasikligi: "orta"
+    ozellik_sayisi: 50
+    topluluk_aktif: true
+    yeniden_egitim_sikliği: "3 gün"
     
-  success_metrics:
-    win_rate: ">45%"
-    sharpe_ratio: ">0.5"
-    max_drawdown: "<10%"
-    avg_rr_achieved: ">1.3"
+  basari_metrikleri:
+    kazanma_orani: ">%45"
+    sharpe_orani: ">0.5"
+    max_dusus: "<%10"
+    ort_rr_ulasildi: ">1.3"
 ```
 
-### Month 5-6: Optimization Phase
+### Ay 5-6: Optimizasyon Fazı
 ```yaml
-phase_3:
-  goals:
-    - "Full system integration"
-    - "Performance optimization"
-    - "Mainnet preparation"
-    - "RR system maturity"
+faz_3:
+  hedefler:
+    - "Tam sistem entegrasyonu"
+    - "Performans optimizasyonu"
+    - "Mainnet hazırlığı"
+    - "RR sistem olgunluğu"
     
-  configuration:
-    active_coins: 20
-    position_size: 0.02  # 2%
-    max_daily_trades: 50
-    exploration_rate: 0.2
-    rr_learning_rate: 0.005  # Mature, slow updates
+  konfigurasy on:
+    aktif_coinler: 20
+    pozisyon_boyutu: 0.02  # %2
+    max_gunluk_trade: 50
+    kesif_orani: 0.2
+    rr_ogrenme_hizi: 0.005  # Olgun, yavaş güncellemeler
     
-  ml_settings:
-    model_complexity: "full"
-    feature_count: 100+
-    rl_agent_active: true
-    retrain_frequency: "daily"
+  ml_ayarlari:
+    model_karmasikligi: "tam"
+    ozellik_sayisi: 100+
+    rl_ajan_aktif: true
+    yeniden_egitim_sikliği: "günlük"
     
-  success_metrics:
-    win_rate: ">55%"
-    sharpe_ratio: ">1.2"
-    profit_factor: ">1.5"
-    max_drawdown: "<8%"
-    rr_stability: "<0.3 volatility"
+  basari_metrikleri:
+    kazanma_orani: ">%55"
+    sharpe_orani: ">1.2"
+    kar_faktoru: ">1.5"
+    max_dusus: "<%8"
+    rr_stabilite: "<0.3 volatilite"
 ```
 
 ---
 
-## 🔄 Adaptive Learning Framework
+## 🔄 Adaptif Öğrenme Çerçevesi
 
-### Meta-Learning System
+### Meta-Öğrenme Sistemi
 ```yaml
-meta_learning:
-  components:
-    performance_tracker:
-      - "Learning curve analysis"
-      - "Convergence speed"
-      - "Generalization gap"
-      - "RR evolution tracking"  # NEW
+meta_ogrenme:
+  bilesenler:
+    performans_takipci:
+      - "Öğrenme eğrisi analizi"
+      - "Yakınsama hızı"
+      - "Genelleme açığı"
+      - "RR evrimi takibi"  # YENİ
       
-    hyperparameter_optimizer:
-      method: "Bayesian Optimization"
-      search_space:
-        learning_rate: [0.00001, 0.01]
-        batch_size: [32, 512]
-        network_depth: [2, 10]
-        rr_signal_weight: [0.5, 0.9]  # NEW
-        rr_market_weight: [0.1, 0.5]  # NEW
+    hiperparametre_optimize:
+      yontem: "Bayesian Optimizasyon"
+      arama_uzayi:
+        ogrenme_hizi: [0.00001, 0.01]
+        batch_boyutu: [32, 512]
+        ag_derinligi: [2, 10]
+        rr_sinyal_agirlik: [0.5, 0.9]  # YENİ
+        rr_piyasa_agirlik: [0.1, 0.5]  # YENİ
         
-    architecture_search:
-      method: "Neural Architecture Search (NAS)"
-      search_strategy: "evolutionary"
+    mimari_arama:
+      yontem: "Neural Architecture Search (NAS)"
+      arama_stratejisi: "evrimsel"
       
-  feedback_loops:
-    short_term: "every 100 trades"
-    medium_term: "weekly"
-    long_term: "monthly"
+  geri_bildirim_donguleri:
+    kisa_vadeli: "her 100 trade"
+    orta_vadeli: "haftalık"
+    uzun_vadeli: "aylık"
 ```
 
 ---
 
-## 📈 Performance Monitoring
+## 📈 Performans İzleme
 
-### Key Metrics Dashboard
+### Anahtar Metrik Dashboard'u
 ```yaml
-kpi_monitoring:
-  real_time:
-    - "Open positions"
-    - "Unrealized PnL"
-    - "Margin usage"
-    - "Current RR targets"  # NEW
+kpi_izleme:
+  gercek_zamanli:
+    - "Açık pozisyonlar"
+    - "Gerçekleşmemiş PnL"
+    - "Marj kullanımı"
+    - "Mevcut RR hedefleri"  # YENİ
     
-  daily:
-    - "Win rate"
-    - "Average RR achieved"  # NEW
-    - "Profit factor"
-    - "RR system efficiency"  # NEW
+  gunluk:
+    - "Kazanma oranı"
+    - "Ortalama ulaşılan RR"  # YENİ
+    - "Kar faktörü"
+    - "RR sistem verimliliği"  # YENİ
     
-  weekly:
-    - "Sharpe ratio"
-    - "Sortino ratio"
-    - "Maximum drawdown"
-    - "RR learning progress"  # NEW
+  haftalik:
+    - "Sharpe oranı"
+    - "Sortino oranı"
+    - "Maksimum düşüş"
+    - "RR öğrenme ilerleme"  # YENİ
     
-  monthly:
+  aylik:
     - "Alpha"
     - "Beta"
-    - "Information ratio"
-    - "RR system maturity"  # NEW
+    - "Bilgi oranı"
+    - "RR sistem olgunluğu"  # YENİ
 ```
 
 ---
 
-## 🛡️ Risk Controls & Circuit Breakers
+## 🛡️ Risk Kontrolleri ve Devre Kesiciler
 
 ```yaml
-circuit_breakers:
-  immediate_stop:
-    - trigger: "drawdown > 10%"
-      action: "halt_all_trading"
+devre_kesiciler:
+  acil_durdurma:
+    - tetikleyici: "dusus > %10"
+      islem: "tum_trading_durdur"
       
-    - trigger: "API connection loss > 60s"
-      action: "emergency_shutdown"
+    - tetikleyici: "API baglanti kaybi > 60s"
+      islem: "acil_kapatma"
       
-    - trigger: "win_rate < 30% (last 50 trades)"
-      action: "switch_to_paper_mode"
+    - tetikleyici: "kazanma_orani < %30 (son 50 trade)"
+      islem: "paper_moda_gec"
       
-  gradual_reduction:
-    - trigger: "drawdown > 5%"
-      action: "reduce_position_sizes_30%"
+  kademeli_azaltma:
+    - tetikleyici: "dusus > %5"
+      islem: "pozisyon_boyutlarini_%30_azalt"
       
-    - trigger: "rr_volatility > 0.4"  # NEW
-      action: "freeze_rr_updates_24h"
+    - tetikleyici: "rr_volatilitesi > 0.4"  # YENİ
+      islem: "rr_guncellemelerini_24s_dondur"
       
-    - trigger: "consecutive_losses > 5"
-      action: "increase_confirmation_requirements"
+    - tetikleyici: "ardisik_kayiplar > 5"
+      islem: "onay_gereksinimlerini_artir"
 ```
 
 ---
 
-## 💾 Data Management
+## 💾 Veri Yönetimi
 
-### Storage Architecture
+### Depolama Mimarisi
 ```yaml
-data_storage:
-  databases:
-    timeseries:
-      type: "InfluxDB"
-      retention: "2 years"
-      data: ["prices", "volumes", "indicators", "rr_values"]  # NEW
+veri_depolama:
+  veritabanlari:
+    zaman_serisi:
+      tip: "InfluxDB"
+      saklama: "2 yıl"
+      veri: ["fiyatlar", "hacimler", "indikatorler", "rr_degerleri"]  # YENİ
       
-    relational:
-      type: "PostgreSQL"
-      data: ["trades", "positions", "parameters", "rr_history"]  # NEW
+    iliskisel:
+      tip: "PostgreSQL"
+      veri: ["trades", "pozisyonlar", "parametreler", "rr_gecmis"]  # YENİ
       
-    cache:
-      type: "Redis"
-      ttl: "24 hours"
-      data: ["orderbook", "recent_trades", "hot_state"]
+    onbellek:
+      tip: "Redis"
+      ttl: "24 saat"
+      veri: ["orderbook", "son_tradelar", "sicak_durum"]
       
-  backup:
-    frequency: "hourly"
-    locations: ["local", "cloud"]
-    retention: "30 days"
+  yedekleme:
+    siklik: "saatlik"
+    konumlar: ["yerel", "bulut"]
+    saklama: "30 gün"
 ```
 
 ---
 
-## 🔐 Security & Monitoring
+## 🔐 Güvenlik ve İzleme
 
 ```yaml
-security:
-  api_keys:
-    storage: "Environment variables + KMS"
-    rotation: "monthly"
-    permissions: "trade only (no withdraw)"
+guvenlik:
+  api_anahtarlari:
+    depolama: "Ortam değişkenleri + KMS"
+    rotasyon: "aylık"
+    izinler: "sadece trade (çekim yok)"
     
-  rate_limiting:
-    orders_per_second: 10
-    requests_per_minute: 1200
+  oran_sinirlama:
+    saniye_basina_emir: 10
+    dakika_basina_istek: 1200
     
-  audit_logging:
-    - "All trades"
-    - "Parameter changes"
-    - "RR system updates"  # NEW
-    - "System errors"
-    - "Shutdown events"  # NEW
+  denetim_loglama:
+    - "Tüm trade'ler"
+    - "Parametre değişiklikleri"
+    - "RR sistem güncellemeleri"  # YENİ
+    - "Sistem hataları"
+    - "Kapatma olayları"  # YENİ
 ```
 
 ---
 
-## 📝 Implementation Checklist
+## 📝 Uygulama Kontrol Listesi
 
-### Pre-Launch (Week 0)
-- [ ] Infrastructure setup
-- [ ] PostgreSQL schema creation
-- [ ] Redis configuration
-- [ ] API connections
-- [ ] State directory structure
+### Lansmanöncesi (Hafta 0)
+- [ ] Altyapı kurulumu
+- [ ] PostgreSQL şema oluşturma
+- [ ] Redis konfigürasyonu
+- [ ] API bağlantıları
+- [ ] State dizin yapısı
 
-### Week 1-2: Core Operations
-- [ ] TradeHistoryManager implementation
-- [ ] ShutdownManager with signal handlers
-- [ ] BackupManager (auto + manual)
-- [ ] Config manager (YAML loader)
-- [ ] Logger system (rotating files)
+### Hafta 1-2: Temel Operasyonlar
+- [ ] TradeHistoryManager implementasyonu
+- [ ] ShutdownManager sinyal işleyicileri ile
+- [ ] BackupManager (otomatik + manuel)
+- [ ] Config yöneticisi (YAML yükleyici)
+- [ ] Logger sistemi (dönen dosyalar)
 
-### Week 3-4: RR System
-- [ ] AdaptiveRRSystem class
-- [ ] Adaptive learning rate logic
-- [ ] Asymmetric update mechanism
-- [ ] Time-weighted rewards
-- [ ] Stabilization freeze logic
-- [ ] State persistence
+### Hafta 3-4: RR Sistemi
+- [ ] AdaptiveRRSystem sınıfı
+- [ ] Adaptif öğrenme hızı mantığı
+- [ ] Asimetrik güncelleme mekanizması
+- [ ] Zaman ağırlıklı ödüller
+- [ ] Stabilizasyon dondurma mantığı
+- [ ] State kalıcılığı
 
-### Week 5-6: Dashboards
+### Hafta 5-6: Dashboard'lar
 - [ ] LearningDashboard (Plotly Dash)
-- [ ] Visual Dashboard enhancements
-- [ ] Real-time RR charts
-- [ ] Alert system integration
-- [ ] Report generation
+- [ ] Görsel Dashboard iyileştirmeleri
+- [ ] Gerçek zamanlı RR grafikleri
+- [ ] Alarm sistemi entegrasyonu
+- [ ] Rapor üretimi
 
-### Week 7-8: Integration & Testing
-- [ ] Full system integration
-- [ ] Paper trading tests (100+ trades)
-- [ ] Shutdown/recovery tests
-- [ ] Backup/restore validation
-- [ ] Performance profiling
+### Hafta 7-8: Entegrasyon ve Test
+- [ ] Tam sistem entegrasyonu
+- [ ] Paper trading testleri (100+ trade)
+- [ ] Kapatma/kurtarma testleri
+- [ ] Yedekleme/geri yükleme doğrulama
+- [ ] Performans profilleme
 
-### Month 1-6: Progressive Training
-- [ ] **M1:** Stability + 100+ trades
-- [ ] **M2:** RR system learning + 500+ trades
-- [ ] **M3:** ML models active + positive Sharpe
-- [ ] **M4:** Multi-timeframe + 50%+ win rate
-- [ ] **M5:** Full RL + <8% drawdown
-- [ ] **M6:** Mainnet ready + all metrics green
-
----
-
-## 🎯 Go-Live Criteria
-
-### Technical Requirements
-- [ ] 3,000+ successful paper trades
-- [ ] System uptime > 99.5%
-- [ ] All databases operational
-- [ ] Backup system validated
-
-### Performance Requirements
-- [ ] Sharpe Ratio > 1.2
-- [ ] Maximum Drawdown < 8%
-- [ ] Win Rate > 55%
-- [ ] Profit Factor > 1.5
-- [ ] Average RR achieved > 1.4  # NEW
-
-### RR System Requirements
-- [ ] RR volatility < 0.3
-- [ ] No freeze events in last 30 days
-- [ ] Learning rate < 0.01 (matured)
-- [ ] rl_factor stable (±0.05 range)
-
-### Operational Requirements
-- [ ] 30 consecutive profitable days
-- [ ] All circuit breakers tested
-- [ ] Disaster recovery validated
-- [ ] Team trained on operations
+### Ay 1-6: Kademeli Eğitim
+- [ ] **M1:** Stabilite + 100+ trade
+- [ ] **M2:** RR sistem öğrenme + 500+ trade
+- [ ] **M3:** ML modeller aktif + pozitif Sharpe
+- [ ] **M4:** Çoklu zaman dilimi + %50+ kazanma oranı
+- [ ] **M5:** Tam RL + <%8 düşüş
+- [ ] **M6:** Mainnet hazır + tüm metrikler yeşil
 
 ---
 
-## 🛠️ COMPLETE DEVELOPMENT ROADMAP
+## 🎯 Canlıya Geçiş Kriterleri
 
-### Overview
-**Total Development Time:** 8-10 weeks  
-**Team Size:** 1-2 developers  
-**Methodology:** Agile with weekly sprints  
+### Teknik Gereksinimler
+- [ ] 3,000+ başarılı paper trade
+- [ ] Sistem çalışma süresi > %99.5
+- [ ] Tüm veritabanları operasyonel
+- [ ] Yedekleme sistemi doğrulandı
+
+### Performans Gereksinimleri
+- [ ] Sharpe Oranı > 1.2
+- [ ] Maksimum Düşüş < %8
+- [ ] Kazanma Oranı > %55
+- [ ] Kar Faktörü > 1.5
+- [ ] Ortalama ulaşılan RR > 1.4  # YENİ
+
+### RR Sistem Gereksinimleri
+- [ ] RR volatilitesi < 0.3
+- [ ] Son 30 günde donma olayı yok
+- [ ] Öğrenme hızı < 0.01 (olgunlaştı)
+- [ ] rl_factor stabil (±0.05 aralığı)
+
+### Operasyonel Gereksinimler
+- [ ] 30 ardışık karlı gün
+- [ ] Tüm devre kesiciler test edildi
+- [ ] Afet kurtarma planı doğrulandı
+- [ ] Ekip operasyonlarda eğitildi
 
 ---
 
-## 📦 PHASE 0: Environment Setup (Week 0 - 3 days)
+## 📚 Teknoloji Yığını
 
-### Infrastructure Setup
 ```yaml
-tasks:
-  - task: "Development environment"
-    subtasks:
-      - "Python 3.11+ virtualenv"
-      - "Git repository setup"
-      - "IDE configuration (VS Code/PyCharm)"
-      - "Pre-commit hooks"
-    duration: "4 hours"
+teknoloji:
+  diller:
+    birincil: "Python 3.10+"
+    performans_kritik: "Rust (yürütme motoru)"
     
-  - task: "Database installation"
-    subtasks:
-      - "PostgreSQL 15+ setup"
-      - "Redis 7+ installation"
-      - "InfluxDB 2.x setup"
-      - "Database clients (pgAdmin, RedisInsight)"
-    duration: "4 hours"
-    
-  - task: "Project structure"
-    subtasks:
-      - "Create directory tree"
-      - "Setup requirements.txt / poetry"
-      - "Environment variables (.env)"
-      - "Config files (config.yaml)"
-    duration: "2 hours"
-    
-  - task: "Initial dependencies"
-    subtasks:
-      - "Install core libraries (pandas, numpy)"
-      - "Install TA libraries (ta-lib, pandas-ta)"
-      - "Install ML libraries (scikit-learn, lightgbm)"
-      - "Install exchange library (python-binance)"
-    duration: "2 hours"
-
-dependencies: []
-deliverables:
-  - "Working dev environment"
-  - "All databases running"
-  - "Project skeleton ready"
-```
-
----
-
-## 📦 PHASE 1: Core Foundation (Week 1-2)
-
-### Priority 1.1: Configuration & Logging System
-```yaml
-modules:
-  - config_manager.py
-  - logger.py
-  
-features:
-  config_manager:
-    - "YAML loader with validation"
-    - "Environment variable override"
-    - "Runtime config updates"
-    - "Config versioning"
-    
-  logger:
-    - "Multi-level logging (DEBUG, INFO, WARNING, ERROR)"
-    - "Rotating file handler (daily rotation)"
-    - "Separate logs (trading, errors, performance, rr_system)"
-    - "Structured logging (JSON format)"
-    
-duration: "3 days"
-dependencies: []
-test_coverage: ">90%"
-```
-
-### Priority 1.2: Database Layer
-```yaml
-modules:
-  - database/postgres_manager.py
-  - database/redis_manager.py
-  - database/influxdb_manager.py
-  
-features:
-  postgres_manager:
-    - "Connection pool management"
-    - "Schema creation (trades table)"
-    - "CRUD operations"
-    - "Transaction handling"
-    
-  redis_manager:
-    - "Connection management"
-    - "Caching utilities"
-    - "Pub/sub for real-time updates"
-    
-  influxdb_manager:
-    - "Time-series data ingestion"
-    - "Query utilities"
-    - "Data retention policies"
-    
-duration: "4 days"
-dependencies: ["config_manager", "logger"]
-test_coverage: ">85%"
-
-database_schemas:
-  trades_table: |
-    CREATE TABLE trades (
-      trade_id UUID PRIMARY KEY,
-      symbol VARCHAR(20) NOT NULL,
-      side VARCHAR(5) NOT NULL CHECK (side IN ('LONG', 'SHORT')),
-      entry_price DECIMAL(20,8) NOT NULL,
-      exit_price DECIMAL(20,8),
-      entry_time TIMESTAMP NOT NULL,
-      exit_time TIMESTAMP,
-      quantity DECIMAL(20,8) NOT NULL,
-      pnl_absolute DECIMAL(20,8),
-      pnl_percent DECIMAL(10,4),
-      pnl_net DECIMAL(20,8),
-      fees_paid DECIMAL(20,8),
-      slippage DECIMAL(10,4),
-      rr_target DECIMAL(5,2),
-      rr_achieved DECIMAL(5,2),
-      stop_loss DECIMAL(20,8),
-      take_profit DECIMAL(20,8),
-      exit_reason VARCHAR(20) CHECK (exit_reason IN 
-        ('RR_TARGET', 'STOP_LOSS', 'SIGNAL_REVERSE', 'MANUAL', 'EMERGENCY')),
-      hold_duration_seconds INTEGER,
-      signal_confidence JSONB,
-      market_conditions JSONB,
-      rl_state JSONB,
-      mae DECIMAL(10,4),
-      mfe DECIMAL(10,4),
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-    CREATE INDEX idx_trades_symbol_entry ON trades(symbol, entry_time DESC);
-    CREATE INDEX idx_trades_exit_reason ON trades(exit_reason, pnl_percent);
-```
-
-### Priority 1.3: Trade History Manager
-```yaml
-module: operations/trade_history_manager.py
-
-features:
-  - "Add trade (async)"
-  - "Get recent trades (with filters)"
-  - "Calculate win rate"
-  - "Calculate average RR"
-  - "Performance analytics"
-  - "MAE/MFE tracking"
-  
-duration: "3 days"
-dependencies: ["postgres_manager", "logger"]
-test_coverage: ">90%"
-
-key_methods:
-  - add_trade(trade_data: Dict) -> UUID
-  - get_recent_trades(limit: int, filters: Dict) -> List[Dict]
-  - get_performance_metrics(window: int) -> Dict
-  - get_win_rate(filters: Dict) -> float
-  - get_avg_rr(filters: Dict) -> float
-```
-
----
-
-## 📦 PHASE 2: Data Infrastructure (Week 2-3)
-
-### Priority 2.1: Data Pipeline
-```yaml
-modules:
-  - data/binance_client.py
-  - data/data_preprocessor.py
-  - data/cache_manager.py
-  
-features:
-  binance_client:
-    - "WebSocket connection (klines)"
-    - "REST API for historical data"
-    - "Order book depth fetching"
-    - "Connection error handling & retry"
-    
-  data_preprocessor:
-    - "Outlier detection (IQR + Z-score)"
-    - "Missing data handling"
-    - "Normalization (RobustScaler)"
-    - "Multi-timeframe alignment"
-    
-  cache_manager:
-    - "Redis-based hot storage"
-    - "Cache invalidation logic"
-    - "TTL management"
-    
-duration: "5 days"
-dependencies: ["redis_manager", "config_manager"]
-test_coverage: ">85%"
-```
-
-### Priority 2.2: Coin Selection Agent
-```yaml
-module: agents/coin_selection_agent.py
-
-features:
-  - "Universe filtering (volume, market cap)"
-  - "Multi-criteria scoring system"
-  - "ML-based ranking (LightGBM)"
-  - "Portfolio construction logic"
-  - "Dynamic rebalancing"
-  - "Correlation management"
-  
-duration: "4 days"
-dependencies: ["binance_client", "postgres_manager"]
-test_coverage: ">80%"
-
-key_methods:
-  - fetch_universe() -> List[str]
-  - calculate_scores(coins: List[str]) -> DataFrame
-  - select_coins(phase: str, count: int) -> List[str]
-  - should_rebalance() -> bool
-  - generate_rebalancing_plan() -> List[Dict]
-```
-
----
-
-## 📦 PHASE 3: Signal & Indicators (Week 3-4)
-
-### Priority 3.1: Technical Indicators
-```yaml
-modules:
-  - indicators/supertrend.py
-  - indicators/most.py
-  - indicators/qqe_mod.py
-  - indicators/rvol.py
-  - indicators/atr.py
-  
-features:
-  - "Vectorized calculations"
-  - "Multi-timeframe support"
-  - "Confidence scoring"
-  - "Caching for performance"
-  
-duration: "4 days"
-dependencies: ["data_preprocessor"]
-test_coverage: ">90%"
-```
-
-### Priority 3.2: Signal Generator
-```yaml
-module: trading/signal_generator.py
-
-features:
-  - "Indicator fusion logic"
-  - "Market regime context"
-  - "Signal confidence calculation"
-  - "Multi-timeframe alignment"
-  - "Signal filtering"
-  
-duration: "3 days"
-dependencies: ["all indicators", "market_regime_detector"]
-test_coverage: ">85%"
-
-key_methods:
-  - generate_signal(symbol: str, timeframe: str) -> Signal
-  - calculate_confidence(signals: List[Signal]) -> float
-  - check_alignment(signals: List[Signal]) -> bool
-```
-
----
-
-## 📦 PHASE 4: Risk & RR System (Week 4-5)
-
-### Priority 4.1: Adaptive RR System
-```yaml
-module: risk/adaptive_rr_system.py
-
-features:
-  - "Signal confidence calculation"
-  - "Market condition assessment"
-  - "Adaptive learning rate"
-  - "Asymmetric RL updates"
-  - "Time-weighted rewards"
-  - "Stabilization freeze logic"
-  - "State persistence"
-  
-duration: "5 days"
-dependencies: ["trade_history_manager", "signal_generator"]
-test_coverage: ">90%"
-
-key_methods:
-  - calculate_rr(signal_data: Dict, market_data: Dict) -> float
-  - calculate_adaptive_lr(context: Dict) -> float
-  - update_rr_factor(trade_result: Dict) -> None
-  - check_stabilization() -> None
-  - save_state() -> None
-  - load_state() -> None
-```
-
-### Priority 4.2: Risk Manager
-```yaml
-module: risk/risk_manager.py
-
-features:
-  - "Position sizing (Kelly Criterion)"
-  - "Stop-loss calculation (ATR-based)"
-  - "Correlation management"
-  - "Drawdown monitoring"
-  - "Portfolio heat tracking"
-  - "Circuit breakers"
-  
-duration: "4 days"
-dependencies: ["adaptive_rr_system", "portfolio_manager"]
-test_coverage: ">85%"
-```
-
----
-
-## 📦 PHASE 5: Trading Engine (Week 5-6)
-
-### Priority 5.1: Order Executor
-```yaml
-module: trading/order_executor.py
-
-features:
-  - "POST-ONLY limit orders"
-  - "Market orders (emergency)"
-  - "Order tracking & status"
-  - "Slippage calculation"
-  - "Fee tracking"
-  - "Retry logic"
-  
-duration: "4 days"
-dependencies: ["binance_client", "risk_manager"]
-test_coverage: ">90%"
-```
-
-### Priority 5.2: Position Manager
-```yaml
-module: trading/position_manager.py
-
-features:
-  - "Open position tracking"
-  - "PnL calculation (realized/unrealized)"
-  - "Stop-loss monitoring"
-  - "Take-profit monitoring"
-  - "Trailing stop logic"
-  - "Position state persistence"
-  
-duration: "3 days"
-dependencies: ["order_executor", "adaptive_rr_system"]
-test_coverage: ">85%"
-```
-
-### Priority 5.3: Trading Engine Core
-```yaml
-module: trading/trading_engine.py
-
-features:
-  - "Main trading loop"
-  - "Signal processing"
-  - "Entry logic"
-  - "Exit logic"
-  - "Emergency handling"
-  - "State management"
-  
-duration: "4 days"
-dependencies: ["signal_generator", "position_manager", "risk_manager"]
-test_coverage: ">80%"
-```
-
----
-
-## 📦 PHASE 6: Operations Layer (Week 6-7)
-
-### Priority 6.1: Shutdown Manager
-```yaml
-module: operations/shutdown_manager.py
-
-features:
-  - "Signal handlers (SIGINT, SIGTERM)"
-  - "7-step graceful shutdown"
-  - "Position handling (close/keep)"
-  - "State flushing"
-  - "Database cleanup"
-  - "Shutdown report generation"
-  - "Emergency shutdown"
-  
-duration: "3 days"
-dependencies: ["position_manager", "trade_history_manager"]
-test_coverage: ">90%"
-```
-
-### Priority 6.2: Backup Manager
-```yaml
-module: operations/backup_manager.py
-
-features:
-  - "Hourly incremental backup"
-  - "Daily full backup"
-  - "Weekly archive"
-  - "Cloud upload (S3/GCS)"
-  - "Auto recovery on startup"
-  - "Manual restore CLI"
-  
-duration: "3 days"
-dependencies: ["config_manager", "logger"]
-test_coverage: ">85%"
-```
-
-### Priority 6.3: Health Monitor
-```yaml
-module: operations/health_monitor.py
-
-features:
-  - "System health checks (every 30s)"
-  - "API connectivity monitoring"
-  - "Database health checks"
-  - "Memory/CPU/Disk monitoring"
-  - "Alert triggering"
-  - "Notification system (Telegram/Email)"
-  
-duration: "3 days"
-dependencies: ["logger", "config_manager"]
-test_coverage: ">80%"
-```
-
----
-
-## 📦 PHASE 7: ML/RL Integration (Week 7-8)
-
-### Priority 7.1: Feature Engineering
-```yaml
-module: ml/feature_engineer.py
-
-features:
-  - "Technical feature extraction"
-  - "Market microstructure features"
-  - "Temporal features"
-  - "Feature scaling"
-  - "Feature selection"
-  
-duration: "3 days"
-dependencies: ["data_preprocessor"]
-test_coverage: ">85%"
-```
-
-### Priority 7.2: ML Model Manager
-```yaml
-module: ml/model_manager.py
-
-features:
-  - "LightGBM for coin selection"
-  - "Model training pipeline"
-  - "Walk-forward validation"
-  - "Model versioning"
-  - "Auto retraining scheduler"
-  
-duration: "4 days"
-dependencies: ["feature_engineer", "trade_history_manager"]
-test_coverage: ">80%"
-```
-
-### Priority 7.3: RL Agent (PPO)
-```yaml
-module: rl/ppo_agent.py
-
-features:
-  - "State space construction"
-  - "Action space definition"
-  - "Reward function"
-  - "PPO training loop"
-  - "Experience replay buffer"
-  - "Model checkpointing"
-  
-duration: "5 days"
-dependencies: ["trading_engine", "feature_engineer"]
-test_coverage: ">75%"
-
-note: "RL agent Month 3+'de aktif olacak, şimdi sadece infra hazır olsun"
-```
-
----
-
-## 📦 PHASE 8: Dashboards & Monitoring (Week 8-9)
-
-### Priority 8.1: Learning Dashboard
-```yaml
-module: dashboard/learning_dashboard.py
-
-features:
-  - "Plotly Dash setup"
-  - "Real-time RR evolution chart"
-  - "Signal accuracy heatmap"
-  - "Reward distribution histogram"
-  - "Learning rate trends"
-  - "Weekly/monthly reports"
-  
-duration: "4 days"
-dependencies: ["trade_history_manager", "adaptive_rr_system"]
-tech_stack: "Plotly Dash 2.x"
-```
-
-### Priority 8.2: Visual Dashboard
-```yaml
-module: dashboard/visual_dashboard.py
-
-features:
-  - "Overview page (PnL, positions)"
-  - "Signals page (heatmap)"
-  - "Risk page (correlation matrix)"
-  - "Performance page (equity curve)"
-  - "RR System page (dedicated)"
-  - "System health page"
-  
-duration: "4 days"
-dependencies: ["trading_engine", "position_manager"]
-tech_stack: "Plotly Dash 2.x + Grafana integration"
-```
-
----
-
-## 📦 PHASE 9: Integration & Testing (Week 9-10)
-
-### Priority 9.1: System Integration
-```yaml
-tasks:
-  - "Integrate all modules into main.py"
-  - "End-to-end testing (paper trading)"
-  - "Fix integration bugs"
-  - "Performance profiling"
-  - "Memory leak detection"
-  
-duration: "5 days"
-```
-
-### Priority 9.2: Testing & Validation
-```yaml
-test_types:
-  unit_tests:
-    - "All modules >80% coverage"
-    - "Critical modules >90% coverage"
-    
-  integration_tests:
-    - "Database operations"
-    - "API connections"
-    - "Signal generation pipeline"
-    - "Order execution flow"
-    
-  system_tests:
-    - "100+ paper trades"
-    - "Shutdown/recovery scenarios"
-    - "Backup/restore validation"
-    - "Circuit breaker triggers"
-    
-duration: "5 days"
-```
-
----
-
-## 📊 Module Dependencies Graph
-
-```
-Level 0 (No dependencies):
-  ├── config_manager
-  └── logger
-
-Level 1 (Depends on Level 0):
-  ├── postgres_manager
-  ├── redis_manager
-  └── influxdb_manager
-
-Level 2 (Depends on Level 1):
-  ├── trade_history_manager
-  ├── binance_client
-  └── data_preprocessor
-
-Level 3 (Depends on Level 2):
-  ├── coin_selection_agent
-  ├── indicators (all)
-  └── cache_manager
-
-Level 4 (Depends on Level 3):
-  ├── signal_generator
-  └── market_regime_detector
-
-Level 5 (Depends on Level 4):
-  ├── adaptive_rr_system
-  └── risk_manager
-
-Level 6 (Depends on Level 5):
-  ├── order_executor
-  └── position_manager
-
-Level 7 (Depends on Level 6):
-  ├── trading_engine
-  └── portfolio_manager
-
-Level 8 (Depends on Level 7):
-  ├── shutdown_manager
-  ├── backup_manager
-  └── health_monitor
-
-Level 9 (Depends on multiple):
-  ├── learning_dashboard
-  ├── visual_dashboard
-  ├── feature_engineer
-  ├── model_manager
-  └── rl_agent
-```
-
----
-
-## 🎯 Critical Path Analysis
-
-**Longest Critical Path:** 8-10 weeks
-
-```
-config_manager (1d) → 
-postgres_manager (2d) → 
-trade_history_manager (3d) → 
-binance_client (3d) → 
-indicators (4d) → 
-signal_generator (3d) → 
-adaptive_rr_system (5d) → 
-risk_manager (4d) → 
-order_executor (4d) → 
-position_manager (3d) → 
-trading_engine (4d) → 
-integration & testing (10d)
-
-Total: ~46 working days (9-10 weeks with buffer)
-```
-
----
-
-## 📋 Development Milestones
-
-### Milestone 1: Foundation Complete (End of Week 2)
-- ✅ Config & logging system working
-- ✅ All databases operational
-- ✅ Trade history manager functional
-- ✅ Data pipeline basic version
-
-### Milestone 2: Trading Logic Complete (End of Week 5)
-- ✅ All indicators implemented
-- ✅ Signal generator working
-- ✅ Adaptive RR system functional
-- ✅ Risk manager operational
-
-### Milestone 3: Trading Engine Ready (End of Week 6)
-- ✅ Order execution working
-- ✅ Position management functional
-- ✅ First paper trades executed
-
-### Milestone 4: Operations Complete (End of Week 7)
-- ✅ Shutdown manager tested
-- ✅ Backup system operational
-- ✅ Health monitoring active
-
-### Milestone 5: Full System Ready (End of Week 10)
-- ✅ All modules integrated
-- ✅ Dashboards operational
-- ✅ 100+ paper trades completed
-- ✅ System stable & ready for 6-month training
-
----
-
-## 🧪 Testing Strategy
-
-### Test Coverage Targets
-```yaml
-critical_modules:
-  - adaptive_rr_system: ">90%"
-  - risk_manager: ">90%"
-  - trade_history_manager: ">90%"
-  - order_executor: ">90%"
-  
-important_modules:
-  - signal_generator: ">85%"
-  - position_manager: ">85%"
-  - indicators: ">85%"
-  
-others: ">80%"
-```
-
-### Test Types
-1. **Unit Tests** - Every module, every function
-2. **Integration Tests** - Module interactions
-3. **System Tests** - End-to-end scenarios
-4. **Performance Tests** - Latency, memory usage
-5. **Chaos Tests** - API failures, database crashes
-
----
-
-## 🚀 Deployment Checklist
-
-### Pre-Production
-- [ ] All unit tests passing
-- [ ] Integration tests passing
-- [ ] 100+ successful paper trades
-- [ ] No memory leaks detected
-- [ ] Backup/restore validated
-- [ ] Shutdown scenarios tested
-- [ ] Dashboards accessible
-
-### Production Readiness
-- [ ] 3000+ paper trades (6 months)
-- [ ] All go-live criteria met
-- [ ] Team trained
-- [ ] Documentation complete
-- [ ] Monitoring active
-- [ ] Emergency procedures documented
-
----
-
-## 📚 Technical Stack
-
-```yaml
-technology:
-  languages:
-    primary: "Python 3.11+"
-    performance_critical: "Rust (execution engine)"
-    
-  frameworks:
+  cerceveler:
     ml: ["TensorFlow", "PyTorch", "scikit-learn"]
     rl: ["Stable-Baselines3", "Ray RLlib"]
-    data: ["Pandas", "Polars", "Apache Arrow"]
-    web: ["Plotly Dash", "Streamlit", "Grafana"]  # NEW
+    veri: ["Pandas", "Polars", "Apache Arrow"]
+    web: ["Plotly Dash", "Streamlit", "Grafana"]  # YENİ
     
-  infrastructure:
-    compute: "AWS EC2 / Google Cloud"
-    monitoring: ["Grafana", "Prometheus"]
-    logging: ["ELK Stack"]
+  altyapi:
+    bilisim: "AWS EC2 / Google Cloud"
+    izleme: ["Grafana", "Prometheus"]
+    loglama: ["ELK Stack"]
     
-  databases:
-    timeseries: "InfluxDB 2.x"
-    relational: "PostgreSQL 15+"
-    cache: "Redis 7+"
+  veritabanlari:
+    zaman_serisi: "InfluxDB 2.x"
+    iliskisel: "PostgreSQL 15+"
+    onbellek: "Redis 7+"
     
-  libraries:
-    technical_analysis: ["TA-Lib", "pandas-ta"]
+  kutuphaneler:
+    teknik_analiz: ["TA-Lib", "pandas-ta"]
     backtesting: ["Vectorbt", "Zipline"]
-    optimization: ["Optuna", "Hyperopt"]
+    optimizasyon: ["Optuna", "Hyperopt"]
 ```
 
 ---
 
-## 🔄 Continuous Improvement
+## 🔄 Sürekli İyileştirme
 
-### Weekly Reviews
-- Performance analysis
-- RR system health check
-- Parameter adjustments
-- Market regime updates
-- Model retraining decisions
+### Haftalık İncelemeler
+- Performans analizi
+- RR sistem sağlık kontrolü
+- Parametre ayarlamaları
+- Piyasa rejimi güncellemeleri
+- Model yeniden eğitim kararları
 
-### Monthly Evolution
-- Strategy additions/removals
-- Feature engineering updates
-- Risk parameter adjustments
-- Infrastructure scaling
-- RR system maturity assessment
+### Aylık Evrim
+- Strateji ekleme/çıkarma
+- Özellik mühendisliği güncellemeleri
+- Risk parametre ayarlamaları
+- Altyapı ölçeklendirme
+- RR sistem olgunluk değerlendirmesi
 
-### Quarterly Assessments
-- Complete system audit
-- Cost-benefit analysis
-- Technology stack updates
-- Strategic direction review
-- Long-term RR performance
+### Üç Aylık Değerlendirmeler
+- Eksiksiz sistem denetimi
+- Maliyet-fayda analizi
+- Teknoloji yığını güncellemeleri
+- Stratejik yön incelemesi
+- Uzun vadeli RR performansı
 
 ---
 
-## 📊 System State Files
+## 📊 Sistem Durum Dosyaları
 
 ```yaml
-state_directory_structure:
+durum_dizin_yapisi:
   state/:
-    - rr_weights.json              # Current RR system weights
-    - rr_learning_history.json     # Last 500 trades learning data
-    - trade_history_buffer.json    # Pending DB writes
-    - model_checkpoint.pkl         # ML model state
-    - rl_experience_replay.pkl     # RL training buffer
-    - open_positions.json          # Active positions
-    - system_metrics.json          # Runtime statistics
+    - rr_weights.json              # Mevcut RR sistem ağırlıkları
+    - rr_learning_history.json     # Son 500 trade öğrenme verisi
+    - trade_history_buffer.json    # Bekleyen DB yazmaları
+    - model_checkpoint.pkl         # ML model durumu
+    - rl_experience_replay.pkl     # RL eğitim tamponu
+    - open_positions.json          # Aktif pozisyonlar
+    - system_metrics.json          # Çalışma zamanı istatistikleri
     
   backups/:
-    - YYYY-MM-DD_HH-MM-SS/        # Timestamped backups
+    - YYYY-AA-GG_SS-DD-SS/        # Zaman damgalı yedekler
       - state/
       - logs/
       - models/
       
   logs/:
-    - trading.log                  # Main trading log
-    - errors.log                   # Error log
-    - performance.log              # Performance metrics
-    - rr_system.log               # RR system updates
-    - shutdown_reports/           # Shutdown event logs
+    - trading.log                  # Ana trading logu
+    - errors.log                   # Hata logu
+    - performance.log              # Performans metrikleri
+    - rr_system.log               # RR sistem güncellemeleri
+    - kapatma_raporlari/          # Kapatma olay logları
 ```
 
 ---
 
-## 🎯 Success Metrics (End of 6 Months)
+## 🎯 Başarı Metrikleri (6 Ay Sonunda)
 
 ```yaml
-performance_targets:
-  returns:
-    monthly: "5-10%"
-    annual_projected: "60-120%"
+performans_hedefleri:
+  getiriler:
+    aylik: "%5-10"
+    yillik_tahmin: "%60-120"
     
-  risk_metrics:
-    sharpe_ratio: ">1.5"
-    sortino_ratio: ">2.0"
-    max_drawdown: "<8%"
+  risk_metrikleri:
+    sharpe_orani: ">1.5"
+    sortino_orani: ">2.0"
+    max_dusus: "<%8"
     
-  operational:
-    win_rate: "55-60%"
-    profit_factor: ">1.5"
-    average_rr_achieved: ">1.4"  # NEW
-    rr_system_efficiency: ">85%"  # NEW
+  operasyonel:
+    kazanma_orani: "%55-60"
+    kar_faktoru: ">1.5"
+    ort_ulasildi_rr: ">1.4"  # YENİ
+    rr_sistem_verimliligi: ">%85"  # YENİ
     
-  costs:
-    total_fees: "<0.5% monthly"
-    slippage: "<0.1% per trade"
+  maliyetler:
+    toplam_ucretler: "<%0.5 aylık"
+    kayma: "<%0.1 trade başına"
     
-  system:
-    uptime: ">99.5%"
-    avg_shutdown_time: "<30s"
-    backup_success_rate: "100%"
+  sistem:
+    calisma_suresi: ">%99.5"
+    ort_kapatma_suresi: "<30s"
+    yedekleme_basari_orani: "%100"
 ```
 
 ---
 
-*Version: 4.1 - Final Production Ready with Complete Development Roadmap*  
-*Last Updated: January 2025*  
-*Status: Ready for Implementation*  
-
----
-
-## 📝 QUICK SUMMARY FOR DEVELOPERS
-
-### What We're Building
-A self-evolving trading bot with:
-- **Adaptive RR System** that learns from each trade
-- **Dynamic Coin Selection** using ML scoring
-- **Complete Lifecycle Management** (shutdown, backup, recovery)
-- **Real-time Dashboards** for monitoring & learning
-- **6-month progressive training** (paper → mainnet)
-
-### Development Timeline
-- **Week 0:** Environment setup (3 days)
-- **Week 1-2:** Core foundation (config, database, trade history)
-- **Week 2-3:** Data infrastructure (API, preprocessing, coin selection)
-- **Week 3-4:** Signals & indicators (SuperTrend, MOST, QQE, RVOL)
-- **Week 4-5:** Risk & RR system (adaptive learning, position sizing)
-- **Week 5-6:** Trading engine (orders, positions, main loop)
-- **Week 6-7:** Operations (shutdown, backup, monitoring)
-- **Week 7-8:** ML/RL integration (models, PPO agent)
-- **Week 8-9:** Dashboards (learning & visual)
-- **Week 9-10:** Integration & testing
-
-### Start Here
-1. **Phase 0:** Setup dev environment → [Week 0 section](#phase-0-environment-setup-week-0---3-days)
-2. **Phase 1:** Build `config_manager.py` and `logger.py` first
-3. **Follow dependency graph** - never skip a dependency
-4. **Test each module** before moving to next
-
-### Key Design Decisions
-- **Coin Selection:** Separate agent (Layer 1.5) with ML-enhanced scoring
-- **RR System:** Fully adaptive with context-aware learning rate
-- **Database:** PostgreSQL (trades), Redis (cache), InfluxDB (metrics)
-- **State Management:** JSON files in `state/` directory
-- **Monitoring:** Dual dashboard (Learning + Visual)
-
-### Critical Paths
-**Must complete in order:**
-```
-Config → Database → Trade History → Data Pipeline → 
-Indicators → Signals → RR System → Risk Manager → 
-Trading Engine → Operations → Integration
-```
-
-**Can develop in parallel:**
-- Coin Selection Agent (after Data Pipeline)
-- ML/RL models (after Trade History)
-- Dashboards (after Trading Engine)
-
-### Next Step
-Choose your starting point:
-- 🔧 **Start coding?** → Begin with Phase 0 (environment setup)
-- 📖 **Need details?** → Review specific Layer documentation
-- 🧪 **Want to test?** → See Testing Strategy section
-- 🚀 **Deploy?** → Check Deployment Checklist
-
-*Ready to build something amazing!* 🚀
+*Versiyon: 4.1 - Final Üretim Hazır*  
+*Son Güncelleme: Ocak 2025*  
+*Durum: Uygulama İçin Hazır*  
+*Sonraki Adım: Faz 1 modüllerini kodlamaya başla*
