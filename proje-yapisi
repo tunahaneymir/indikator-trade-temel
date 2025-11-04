@@ -1,0 +1,512 @@
+# ==========================================
+# PROJE YAPISI - Trading Bot v4.1
+# ==========================================
+
+trading-bot/
+│
+├── README.md                          # Proje özeti
+├── requirements.txt                   # Python bağımlılıkları
+├── .env.example                       # Ortam değişkenleri şablonu
+├── .gitignore                        # Git yoksay kuralları
+├── setup.py                          # Paket kurulumu
+│
+├── config/
+│   ├── config.yaml                   # Ana konfigürasyon
+│   ├── config_dev.yaml              # Geliştirme config
+│   ├── config_prod.yaml             # Üretim config
+│   └── secrets.yaml                 # API anahtarları (git'de yok)
+│
+├── src/
+│   ├── __init__.py
+│   │
+│   ├── core/                        # Temel yardımcılar (Faz 1)
+│   │   ├── __init__.py
+│   │   ├── config_manager.py       # YAML config yükleyici
+│   │   ├── logger.py               # Loglama sistemi
+│   │   └── constants.py            # Global sabitler
+│   │
+│   ├── database/                    # Veritabanı katmanı (Faz 1)
+│   │   ├── __init__.py
+│   │   ├── postgres_manager.py     # PostgreSQL
+│   │   ├── redis_manager.py        # Redis önbellek
+│   │   └── influxdb_manager.py     # InfluxDB metrikler
+│   │
+│   ├── operations/                  # Operasyon katmanı (Faz 1, 6)
+│   │   ├── __init__.py
+│   │   ├── trade_history_manager.py
+│   │   ├── shutdown_manager.py     # Faz 6
+│   │   ├── backup_manager.py       # Faz 6
+│   │   └── health_monitor.py       # Faz 6
+│   │
+│   ├── data/                        # Veri hattı (Faz 2)
+│   │   ├── __init__.py
+│   │   ├── binance_client.py       # API wrapper
+│   │   ├── data_preprocessor.py    # Temizleme & normalizasyon
+│   │   ├── cache_manager.py        # Redis önbellekleme
+│   │   └── websocket_handler.py    # Gerçek zamanlı veri
+│   │
+│   ├── agents/                      # Akıllı ajanlar (Faz 2)
+│   │   ├── __init__.py
+│   │   ├── coin_selection_agent.py # Çok kriterli skorlama
+│   │   └── market_regime_detector.py
+│   │
+│   ├── indicators/                  # Teknik indikatörler (Faz 3)
+│   │   ├── __init__.py
+│   │   ├── supertrend.py
+│   │   ├── most.py
+│   │   ├── qqe_mod.py
+│   │   ├── rvol.py
+│   │   ├── atr.py
+│   │   └── base_indicator.py       # Temel sınıf
+│   │
+│   ├── trading/                     # Trading mantığı (Faz 3, 5)
+│   │   ├── __init__.py
+│   │   ├── signal_generator.py     # Faz 3
+│   │   ├── order_executor.py       # Faz 5
+│   │   ├── position_manager.py     # Faz 5
+│   │   └── trading_engine.py       # Faz 5
+│   │
+│   ├── risk/                        # Risk yönetimi (Faz 4)
+│   │   ├── __init__.py
+│   │   ├── adaptive_rr_system.py   # Ana RR mantığı
+│   │   ├── risk_manager.py         # Pozisyon boyutlandırma, stoplar
+│   │   └── portfolio_manager.py    # Çoklu pozisyon yönetimi
+│   │
+│   ├── ml/                          # Makine Öğrenimi (Faz 7)
+│   │   ├── __init__.py
+│   │   ├── feature_engineer.py
+│   │   ├── model_manager.py        # LightGBM, XGBoost
+│   │   └── model_trainer.py
+│   │
+│   ├── rl/                          # Pekiştirmeli Öğrenme (Faz 7)
+│   │   ├── __init__.py
+│   │   ├── ppo_agent.py           # Stable-Baselines3
+│   │   ├── environment.py          # Gym ortamı
+│   │   └── reward_function.py
+│   │
+│   ├── dashboard/                   # İzleme (Faz 8)
+│   │   ├── __init__.py
+│   │   ├── learning_dashboard.py   # Plotly Dash
+│   │   ├── visual_dashboard.py     # Trading dashboard
+│   │   └── grafana_exporter.py     # Prometheus metrikleri
+│   │
+│   └── utils/                       # Yardımcılar
+│       ├── __init__.py
+│       ├── validators.py
+│       ├── decorators.py
+│       └── helpers.py
+│
+├── state/                           # Çalışma zamanı durumu (git'de yok)
+│   ├── rr_weights.json             # RR sistem durumu
+│   ├── rr_learning_history.json   # Öğrenme verisi
+│   ├── trade_history_buffer.json  # Bekleyen DB yazmaları
+│   ├── open_positions.json        # Aktif pozisyonlar
+│   ├── model_checkpoint.pkl       # ML modeller
+│   └── system_metrics.json        # Çalışma zamanı istatistikleri
+│
+├── backups/                         # Otomatik yedekler
+│   ├── 2025-01-04_12-00-00/
+│   ├── 2025-01-04_13-00-00/
+│   └── ...
+│
+├── logs/                            # Log dosyaları
+│   ├── trading.log
+│   ├── errors.log
+│   ├── performance.log
+│   ├── rr_system.log
+│   └── shutdown_reports/
+│
+├── data/                            # Geçmiş veri
+│   ├── raw/                        # Ham piyasa verisi
+│   ├── processed/                  # İşlenmiş veri
+│   └── parquet/                    # Sıkıştırılmış arşivler
+│
+├── models/                          # Kaydedilmiş ML modeller
+│   ├── coin_selector_v1.pkl
+│   ├── lightgbm_direction_v2.pkl
+│   └── ppo_agent_checkpoint_1000.zip
+│
+├── tests/                           # Test paketi
+│   ├── __init__.py
+│   ├── test_config_manager.py
+│   ├── test_trade_history.py
+│   ├── test_rr_system.py
+│   ├── test_risk_manager.py
+│   ├── test_indicators/
+│   └── integration/
+│       ├── test_full_pipeline.py
+│       └── test_shutdown_recovery.py
+│
+├── scripts/                         # Yardımcı scriptler
+│   ├── setup_databases.py          # DB şemalarını oluştur
+│   ├── migrate_data.py             # Veri taşıma
+│   ├── backtest_strategy.py        # Backtest
+│   └── generate_report.py          # Performans raporları
+│
+├── notebooks/                       # Jupyter notebook'lar
+│   ├── 01_veri_kesfı.ipynb
+│   ├── 02_indikator_test.ipynb
+│   ├── 03_ml_model_egitimi.ipynb
+│   └── 04_performans_analizi.ipynb
+│
+├── docs/                            # Dokümantasyon
+│   ├── mimari_v4.1.md             # Sistem mimarisi
+│   ├── api_referans.md            # API dokümantasyonu
+│   ├── deployment_rehberi.md      # Deployment talimatları
+│   └── sorun_giderme.md           # Yaygın sorunlar
+│
+└── main.py                          # Giriş noktası
+
+# ==========================================
+# İLK KURULUM KOMUTLARI
+# ==========================================
+
+# 1. Proje yapısını oluştur
+mkdir -p trading-bot/{config,src/{core,database,operations,data,agents,indicators,trading,risk,ml,rl,dashboard,utils},state,backups,logs,data/{raw,processed,parquet},models,tests/{integration},scripts,notebooks,docs}
+
+# 2. __init__.py dosyalarını oluştur
+find trading-bot/src -type d -exec touch {}/__init__.py \;
+find trading-bot/tests -type d -exec touch {}/__init__.py \;
+
+# 3. Git'i başlat
+cd trading-bot
+git init
+git add .
+git commit -m "İlk proje yapısı"
+
+# 4. Virtual environment oluştur
+python3.10 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# 5. Bağımlılıkları yükle
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 6. Ortam değişkenlerini ayarla
+cp .env.example .env
+# .env dosyasını API anahtarlarınızla düzenleyin
+
+# 7. Veritabanlarını başlat
+python scripts/setup_databases.py
+
+# ==========================================
+# .env.example ŞABLONU
+# ==========================================
+
+# Binance API
+BINANCE_API_KEY=buraya_api_anahtariniz
+BINANCE_API_SECRET=buraya_api_secretiniz
+BINANCE_TESTNET=true  # testnet için true, mainnet için false
+
+# Veritabanı Konfigürasyonu
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=trading_bot
+POSTGRES_USER=trading_user
+POSTGRES_PASSWORD=guvenli_sifre
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+
+INFLUXDB_URL=http://localhost:8086
+INFLUXDB_TOKEN=influxdb_tokeniniz
+INFLUXDB_ORG=trading_org
+INFLUXDB_BUCKET=trading_metrics
+
+# Bulut Yedekleme (opsiyonel)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=trading-bot-backups
+AWS_REGION=eu-central-1
+
+# Bildirimler (opsiyonel)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+DISCORD_WEBHOOK_URL=
+
+# Sistem
+LOG_LEVEL=INFO
+ENVIRONMENT=development  # development, staging, production
+
+# ==========================================
+# .gitignore ŞABLONU
+# ==========================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ortam
+.env
+config/secrets.yaml
+
+# Durum ve Loglar
+state/
+logs/
+backups/
+
+# Veri
+data/raw/
+data/processed/
+*.parquet
+*.csv
+*.json
+
+# Modeller
+models/*.pkl
+models/*.zip
+models/*.h5
+
+# Notebook'lar
+.ipynb_checkpoints/
+
+# İşletim Sistemi
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# KURULUM NOTLARI
+# ==========================================
+
+## 1. TA-Lib Kurulumu
+TA-Lib C kütüphanesi gerektirir:
+
+### Ubuntu/Debian:
+```bash
+sudo apt-get install ta-lib
+pip install TA-Lib
+```
+
+### macOS:
+```bash
+brew install ta-lib
+pip install TA-Lib
+```
+
+### Windows:
+1. https://ta-lib.org/ adresinden indir
+2. Talimatları takip et
+3. pip install TA-Lib
+
+## 2. PostgreSQL Kurulumu
+
+### Ubuntu/Debian:
+```bash
+sudo apt-get install postgresql postgresql-contrib libpq-dev
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Veritabanı oluştur
+sudo -u postgres psql
+CREATE DATABASE trading_bot;
+CREATE USER trading_user WITH PASSWORD 'guvenli_sifre';
+GRANT ALL PRIVILEGES ON DATABASE trading_bot TO trading_user;
+\q
+```
+
+### macOS:
+```bash
+brew install postgresql
+brew services start postgresql
+
+# Veritabanı oluştur
+psql postgres
+CREATE DATABASE trading_bot;
+CREATE USER trading_user WITH PASSWORD 'guvenli_sifre';
+GRANT ALL PRIVILEGES ON DATABASE trading_bot TO trading_user;
+\q
+```
+
+### Windows:
+1. PostgreSQL installer'ı indir ve çalıştır
+2. pgAdmin ile database oluştur
+
+## 3. Redis Kurulumu
+
+### Ubuntu/Debian:
+```bash
+sudo apt-get install redis-server
+sudo systemctl start redis-server
+sudo systemctl enable redis-server
+```
+
+### macOS:
+```bash
+brew install redis
+brew services start redis
+```
+
+### Windows:
+1. Redis Windows versiyonunu indir
+2. redis-server.exe çalıştır
+
+## 4. InfluxDB Kurulumu
+
+### Ubuntu/Debian:
+```bash
+wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.7.1-amd64.deb
+sudo dpkg -i influxdb2-2.7.1-amd64.deb
+sudo systemctl start influxdb
+sudo systemctl enable influxdb
+```
+
+### macOS:
+```bash
+brew install influxdb
+brew services start influxdb
+```
+
+### Windows:
+1. InfluxDB Windows versiyonunu indir
+2. influxd.exe çalıştır
+
+## 5. GPU Desteği (PyTorch/TensorFlow - Opsiyonel)
+
+CUDA toolkit kurulu olmalı:
+
+```bash
+# PyTorch GPU:
+pip install torch --index-url https://download.pytorch.org/whl/cu118
+
+# TensorFlow GPU:
+pip install tensorflow[and-cuda]
+```
+
+## 6. Kurulum Sırası
+
+```bash
+# 1. Virtual environment
+python3.10 -m venv venv
+source venv/bin/activate
+
+# 2. Pip güncelle
+pip install --upgrade pip
+
+# 3. Requirements yükle
+pip install -r requirements.txt
+
+# 4. Veritabanlarını test et
+python -c "import psycopg2; import redis; import influxdb_client; print('Tüm DB bağlantıları OK')"
+
+# 5. Config dosyasını düzenle
+cp config/config.yaml config/config_dev.yaml
+# config_dev.yaml'ı düzenle
+
+# 6. İlk test
+python main.py --mode=test
+```
+
+## 7. Yaygın Sorunlar
+
+### Problem: "No module named 'talib'"
+Çözüm: TA-Lib C kütüphanesini yükle (yukarıya bakın)
+
+### Problem: "psycopg2 import hatası"
+Çözüm: 
+```bash
+# Ubuntu/Debian:
+sudo apt-get install libpq-dev
+
+# macOS:
+brew install postgresql
+```
+
+### Problem: "Redis bağlantı hatası"
+Çözüm:
+```bash
+# Redis çalışıyor mu kontrol et
+redis-cli ping
+# PONG dönmeli
+
+# Çalışmıyorsa başlat
+sudo systemctl start redis-server  # Linux
+brew services start redis           # macOS
+```
+
+### Problem: "Permission denied" hatası
+Çözüm:
+```bash
+# state/ ve logs/ klasörlerine yazma izni ver
+chmod -R 755 state logs backups
+```
+
+# ==========================================
+# GELİŞTİRME İPUÇLARI
+# ==========================================
+
+## Pre-commit Hook Kurulumu
+```bash
+pip install pre-commit
+pre-commit install
+
+# .pre-commit-config.yaml oluştur:
+# - black (kod formatı)
+# - flake8 (linter)
+# - mypy (tip kontrolü)
+```
+
+## Test Çalıştırma
+```bash
+# Tüm testler
+pytest
+
+# Kapsama raporu ile
+pytest --cov=src --cov-report=html
+
+# Belirli bir test
+pytest tests/test_config_manager.py -v
+
+# Belirli bir fonksiyon
+pytest tests/test_rr_system.py::test_calculate_adaptive_lr -v
+```
+
+## Kod Kalitesi Kontrolleri
+```bash
+# Format kontrolü
+black src/ --check
+
+# Format uygula
+black src/
+
+# Linting
+flake8 src/
+
+# Tip kontrolü
+mypy src/
+
+# Tümü birden
+black src/ && flake8 src/ && mypy src/ && pytest
+```
+
+## Dokümantasyon Oluşturma
+```bash
+# Sphinx kurulumu
+pip install sphinx sphinx-rtd-theme
+
+# Dokümantasyon başlat
+cd docs
+sphinx-quickstart
+
+# HTML oluştur
+make html
+```
+
+# ==========================================
